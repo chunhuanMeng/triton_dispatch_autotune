@@ -7,6 +7,17 @@
 | Peak INT8 TOPS | 234.0 TOPS |
 | Peak DRAM BW | 456.0 GB/s |
 
+### 计算公式
+
+```
+TOPS      = 2 × M × N × K / time(s) / 1e12
+BW (GB/s) = (M×K×1 + K×N×1 + M×N×4) / time(s) / 1e9
+           （输入 A,B 为 int8，输出 C 为 int32）
+TOPS Eff% = 实际 TOPS / 234 TOPS × 100%
+BW Eff%   = 实际 BW / 456 GB/s × 100%
+ratio to onednn = onednn_time / triton_time
+```
+
 ## Per-Shape Oracle Performance
 
 | Shape (M,N,K) | Config | Template | Time (μs) | ratio to onednn | TOPS | TOPS Eff % | BW (GB/s) | BW Eff % |
