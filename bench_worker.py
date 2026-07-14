@@ -17,7 +17,7 @@ def kernel_triton_mm(
     BLOCK_M: tl.constexpr, BLOCK_N: tl.constexpr, BLOCK_K: tl.constexpr,
     GROUP_M: tl.constexpr,
 ):
-    pid = tl.program_id(0)
+    pid = tl.program_id(0).to(tl.int32)
     grid_m = tl.cdiv(M, BLOCK_M)
     grid_n = tl.cdiv(N, BLOCK_N)
     width = GROUP_M * grid_n
@@ -25,24 +25,47 @@ def kernel_triton_mm(
     group_size = min(grid_m - group_id * GROUP_M, GROUP_M)
     pid_m = group_id * GROUP_M + (pid % group_size)
     pid_n = (pid % width) // group_size
+    tl.assume(pid_m >= 0)
+    tl.assume(pid_n >= 0)
 
-    rm = pid_m * BLOCK_M + tl.arange(0, BLOCK_M)
-    rn = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
-    offs_k = tl.arange(0, BLOCK_K)
+    rm = pid_m * BLOCK_M + tl.arange(0, BLOCK_M).to(tl.int32)
+    rn = pid_n * BLOCK_N + tl.arange(0, BLOCK_N).to(tl.int32)
+    # Pointer alignment optimization (from Inductor triton_mm.py.jinja)
+    if ((stride_am == 1 and stride_ak == M) or (stride_am == K and stride_ak == 1)) and (M >= BLOCK_M and K > 1):
+        offs_a_m = tl.max_contiguous(tl.multiple_of(rm % M, BLOCK_M), BLOCK_M)
+    else:
+        offs_a_m = rm % M
+    if ((stride_bk == 1 and stride_bn == K) or (stride_bk == N and stride_bn == 1)) and (N >= BLOCK_N and K > 1):
+        offs_b_n = tl.max_contiguous(tl.multiple_of(rn % N, BLOCK_N), BLOCK_N)
+    else:
+        offs_b_n = rn % N
+    offs_k = tl.arange(0, BLOCK_K).to(tl.int32)
 
     acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.int32)
     for k_idx in range(0, tl.cdiv(K, BLOCK_K)):
         k_off = k_idx * BLOCK_K
-        a_mask = (rm[:, None] < M) & (offs_k[None, :] + k_off < K)
-        b_mask = (offs_k[:, None] + k_off < K) & (rn[None, :] < N)
-        a = tl.load(A + rm[:, None] * stride_am + (offs_k[None, :] + k_off) * stride_ak,
-                    mask=a_mask, other=0)
-        b = tl.load(B + (offs_k[:, None] + k_off) * stride_bk + rn[None, :] * stride_bn,
-                    mask=b_mask, other=0)
+        a_mask = offs_k[None, :] < (K - k_off)
+        b_mask = offs_k[:, None] < (K - k_off)
+        a_k_idx_vals = offs_k[None, :] + k_off
+        b_k_idx_vals = offs_k[:, None] + k_off
+
+        idx_m = offs_a_m[:, None]
+        idx_n = a_k_idx_vals
+        a = tl.load(A + idx_m * stride_am + idx_n * stride_ak, mask=a_mask, other=0)
+
+        idx_m = b_k_idx_vals
+        idx_n = offs_b_n[None, :]
+        b = tl.load(B + idx_m * stride_bk + idx_n * stride_bn, mask=b_mask, other=0)
+
         acc = tl.dot(a, b, acc, out_dtype=tl.int32)
 
-    mask = (rm[:, None] < M) & (rn[None, :] < N)
-    tl.store(C + rm[:, None] * stride_cm + rn[None, :] * stride_cn, acc, mask=mask)
+    # Rematerialize rm and rn
+    rm = pid_m * BLOCK_M + tl.arange(0, BLOCK_M).to(tl.int32)
+    rn = pid_n * BLOCK_N + tl.arange(0, BLOCK_N).to(tl.int32)
+    idx_m = rm[:, None]
+    idx_n = rn[None, :]
+    mask = (idx_m < M) & (idx_n < N)
+    tl.store(C + idx_m * stride_cm + idx_n * stride_cn, acc, mask=mask)
 
 
 # ═══ Template 2: bmg_persistent (block_ptr, persistent 1D grid) ═══
