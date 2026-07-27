@@ -18,24 +18,60 @@ from math import exp, log
 from pathlib import Path
 
 from search_space import (
-    ALL_SHAPES, TEMPLATES, GemmConfig,
-    generate_valid_configs, generate_good_configs, get_shape_family, get_source_pattern,
+    ALL_SHAPES, TEMPLATES, GemmConfig, DispatchConfig,
+    generate_valid_configs, generate_good_configs, generate_autotune_configs,
+    get_shape_family, get_source_pattern, template_config_keys,
+    is_valid_for_template,
 )
-from bench_worker import bench_config_all_templates, bench_onednn
+from bench_worker import bench_config_all_templates, bench_one_template, bench_onednn
+
+
+# The autotune state is dtype-specific.  Do not reuse INT8 timings for BF16 or
+# FP16: the accumulator, output size, reference operator, and Triton lowering
+# are different.  INT8 keeps the historical ``state`` directory for resume
+# compatibility; floating-point runs use separate directories.
+AUTOTUNE_DTYPE = os.environ.get("XE2_AUTOTUNE_DTYPE", "int8")
+# ``generic`` preserves the original worker autotune behavior: use the search
+# candidates declared in search_space.py and test every template.  ``exact``
+# restricts the search to configs currently registered by Inductor and is
+# useful only for a strict parity run.
+SEARCH_SPACE_MODE = os.environ.get("XE2_AUTOTUNE_SEARCH_SPACE", "generic")
 
 # ═══ Paths ═══
-STATE_DIR = Path("state")
+STATE_DIR = Path("state_v6") if AUTOTUNE_DTYPE == "int8" else Path(f"state_{AUTOTUNE_DTYPE}_v6")
 BASELINE_FILE = STATE_DIR / "onednn_baseline.json"
 DISPATCH_FILE = STATE_DIR / "dispatch_table.json"
 SWEEP_FILE = STATE_DIR / "sweep_results.json"
 SEARCH_CACHE_DIR = STATE_DIR / "search_cache"
 LOG_FILE = STATE_DIR / "iteration_log.json"
 
+
+def configure_dtype(dtype):
+    """Select dtype and rebuild all state paths before any step runs."""
+    global AUTOTUNE_DTYPE, STATE_DIR, BASELINE_FILE, DISPATCH_FILE
+    global SWEEP_FILE, SEARCH_CACHE_DIR, LOG_FILE
+    if dtype not in ("int8", "bf16", "fp16"):
+        raise ValueError(f"unsupported dtype: {dtype}")
+    AUTOTUNE_DTYPE = dtype
+    STATE_DIR = Path("state_v6") if dtype == "int8" else Path(f"state_{dtype}_v6")
+    BASELINE_FILE = STATE_DIR / "onednn_baseline.json"
+    DISPATCH_FILE = STATE_DIR / "dispatch_table.json"
+    SWEEP_FILE = STATE_DIR / "sweep_results.json"
+    SEARCH_CACHE_DIR = STATE_DIR / "search_cache"
+    LOG_FILE = STATE_DIR / "iteration_log.json"
+
 # ═══ Parameters ═══
 MAX_DISPATCH_SIZE = 15
 CONVERGE_RATIO = 0.95
 MAX_ROUNDS = 20
 MAX_NO_PROMOTION_ROUNDS = 3
+
+# Benchmark iteration policy:
+# - Full candidate searches prioritize coverage and use fewer iterations.
+# - A candidate that may be promoted is remeasured more carefully.
+# Keep the baseline and dispatch sweeps at their existing stable setting.
+FULL_SEARCH_NUM_ITERS = 50
+PROMOTION_NUM_ITERS = 200
 
 # Promotion gates
 CORE_TARGET_GAIN = 0.05        # 5%
@@ -83,7 +119,12 @@ def step_baseline():
     print(f"Measuring oneDNN baseline: {len(remaining)} shapes remaining")
 
     for i, (M, N, K) in enumerate(remaining):
-        time_us = bench_onednn(M, N, K, num_iters=200)
+        time_us = bench_onednn(M, N, K, num_iters=500, dtype=AUTOTUNE_DTYPE)
+        if time_us is None:
+            raise RuntimeError(
+                f"oneDNN baseline benchmark failed for shape ({M},{N},{K}); "
+                "see the worker error output"
+            )
         baseline[shape_key(M, N, K)] = {"time_us": round(time_us, 2)}
         # Save incrementally
         if (i + 1) % 5 == 0 or i == len(remaining) - 1:
@@ -108,7 +149,7 @@ def step_seed():
 
     dispatch_table = []
     if DISPATCH_FILE.exists():
-        dispatch_table = [GemmConfig.from_dict(d) for d in json.loads(DISPATCH_FILE.read_text())]
+        dispatch_table = [DispatchConfig.from_dict(d) for d in json.loads(DISPATCH_FILE.read_text())]
         if dispatch_table:
             print(f"Dispatch table already has {len(dispatch_table)} configs, skipping seed")
             return dispatch_table
@@ -120,7 +161,7 @@ def step_seed():
             for config, time_us in results[:2]:
                 if config not in dispatch_table:
                     dispatch_table.append(config)
-                    print(f"  Seed: added {config} BM={config.BLOCK_M} BN={config.BLOCK_N} "
+                    print(f"  Seed: added {config.template} BM={config.BLOCK_M} BN={config.BLOCK_N} "
                           f"BK={config.BLOCK_K} NS={config.num_stages} NW={config.num_warps} ({time_us:.1f}us)")
 
     # Save
@@ -130,25 +171,45 @@ def step_seed():
 
 
 def search_shape(M, N, K):
-    """Full search on one shape. Returns sorted list of (config, time_us). Uses cache."""
+    """Full six-dimensional search on one shape. Uses a dtype-specific cache."""
     cache_file = SEARCH_CACHE_DIR / f"search_{M}_{N}_{K}.json"
 
     # Load cache
     cached_results = {}
     if cache_file.exists():
         data = json.loads(cache_file.read_text())
-        cached_results = {tuple(d["config_key"]): d["time_us"] for d in data.get("results", [])}
+        cached_results = {
+            tuple(d["config_key"]): d["time_us"] for d in data.get("results", [])
+        }
 
-    # Use good configs (conservatively pruned) for faster search
-    valid_configs = generate_good_configs(M, N, K)
-    print(f"  Searching ({M},{N},{K}): {len(valid_configs)} good configs, {len(cached_results)} cached")
+    if SEARCH_SPACE_MODE == "exact":
+        # Strict parity mode: only configs registered by the corresponding
+        # Inductor heuristic are benchmarked.
+        valid_configs = generate_autotune_configs(M, N, K, AUTOTUNE_DTYPE)
+        choices = [
+            (template, config)
+            for config in valid_configs
+            for template in TEMPLATES
+            if config.key in template_config_keys(template, AUTOTUNE_DTYPE)
+        ]
+    else:
+        # Original autotune mode: use the declared generic search space rather
+        # than silently replacing it with a small fixed candidate list.
+        valid_configs = generate_good_configs(M, N, K)
+        choices = [
+            (template, config)
+            for config in valid_configs
+            for template in TEMPLATES
+            if is_valid_for_template(M, N, K, config, template)
+        ]
+    print(f"  Searching ({M},{N},{K}): {len(choices)} template/config choices, {len(cached_results)} cached")
 
     results = []
     new_count = 0
     failed = 0
 
-    for i, config in enumerate(valid_configs):
-        key = list(config.key)
+    for i, (template, config) in enumerate(choices):
+        key = [template, *config.key]
         if tuple(key) in cached_results:
             cached = cached_results[tuple(key)]
             if isinstance(cached, dict):
@@ -156,23 +217,25 @@ def search_shape(M, N, K):
             else:
                 time_us = cached  # backward compat
             if time_us is not None:
-                results.append((config, time_us))
+                results.append((DispatchConfig(template, config), time_us))
             continue
 
-        # Benchmark all templates, get best time + winning template
-        time_us, best_template = bench_config_all_templates(M, N, K, config)
-        cached_results[tuple(key)] = {"time_us": time_us, "template": best_template}
+        time_us = bench_one_template(
+            M, N, K, config, template,
+            num_iters=FULL_SEARCH_NUM_ITERS, dtype=AUTOTUNE_DTYPE
+        )
+        cached_results[tuple(key)] = {"time_us": time_us, "template": template}
         new_count += 1
 
         if time_us is not None:
-            results.append((config, time_us))
+            results.append((DispatchConfig(template, config), time_us))
         else:
             failed += 1
 
         # Save cache periodically
         if new_count % 10 == 0:
             _save_search_cache(cache_file, M, N, K, cached_results)
-            print(f"    [{i+1}/{len(valid_configs)}] {new_count} new, {failed} failed")
+            print(f"    [{i+1}/{len(choices)}] {new_count} new, {failed} failed")
 
     # Final save
     _save_search_cache(cache_file, M, N, K, cached_results)
@@ -195,24 +258,41 @@ def _save_search_cache(cache_file, M, N, K, cached_results):
 
 # ═══ Step 2: Sweep ═══
 def step_sweep(dispatch_table, baseline, round_num=0):
-    """Sweep all shapes with current dispatch table."""
+    """Sweep all shapes with current dispatch table.
+
+    Reuse completed shape/config measurements from SWEEP_FILE.  This is
+    important because a sweep can be interrupted after many shapes; the
+    previous implementation only wrote the file after the whole sweep and
+    always re-benchmarked every config on resume.
+    """
     results = {}  # shape_key -> {config_key : time_us}
     ratios = {}
+
+    cached_results = {}
+    if SWEEP_FILE.exists():
+        try:
+            cached_results = json.loads(SWEEP_FILE.read_text()).get("results", {})
+            print(f"Loaded sweep cache: {len(cached_results)} shapes")
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"Warning: ignoring invalid sweep cache {SWEEP_FILE}: {exc}")
 
     print(f"Sweeping {len(ALL_SHAPES)} shapes × {len(dispatch_table)} configs...")
     for i, (M, N, K) in enumerate(ALL_SHAPES):
         sk = shape_key(M, N, K)
+        old_shape_results = cached_results.get(sk, {})
         shape_results = {}
 
         for config in dispatch_table:
-            # Check validity
-            from search_space import is_valid_config
-            if not is_valid_config(M, N, K, config.BLOCK_M, config.BLOCK_N,
-                                   config.BLOCK_K, config.num_stages, config.num_warps):
-                continue
-            time_us = bench_config_all_templates(M, N, K, config, num_iters=200)[0]
+            config_key = str(config.key)
+            if config_key in old_shape_results:
+                time_us = old_shape_results[config_key]
+            else:
+                time_us = bench_one_template(
+                    M, N, K, config.gemm, config.template,
+                    num_iters=500, dtype=AUTOTUNE_DTYPE,
+                )
             if time_us is not None:
-                shape_results[str(config.key)] = time_us
+                shape_results[config_key] = time_us
 
         if shape_results:
             best_time = min(shape_results.values())
@@ -226,18 +306,22 @@ def step_sweep(dispatch_table, baseline, round_num=0):
         if (i + 1) % 10 == 0:
             metrics = compute_metrics(ratios)
             print(f"  [{i+1}/{len(ALL_SHAPES)}] gmean={metrics['gmean']:.4f} worst={metrics['worst']:.4f}")
+            _save_sweep_results(results, ratios, round_num)
 
-    # Save to per-round directory
+    _save_sweep_results(results, ratios, round_num)
+    metrics = compute_metrics(ratios)
+    print(f"Sweep done: gmean={metrics['gmean']:.4f} tail={metrics['tail']:.4f} worst={metrics['worst']:.4f}")
+    return results, ratios, metrics
+
+
+def _save_sweep_results(results, ratios, round_num):
+    """Persist sweep progress to the resume cache and current round."""
     sweep_data = json.dumps({"results": results, "ratios": ratios}, indent=2)
     if round_num > 0:
         round_dir = STATE_DIR / f"round_{round_num}"
         round_dir.mkdir(exist_ok=True)
         (round_dir / "sweep_results.json").write_text(sweep_data)
-    # Also save to fixed location for promotion eval
     SWEEP_FILE.write_text(sweep_data)
-    metrics = compute_metrics(ratios)
-    print(f"Sweep done: gmean={metrics['gmean']:.4f} tail={metrics['tail']:.4f} worst={metrics['worst']:.4f}")
-    return results, ratios, metrics
 
 
 # ═══ Step 3: Zero-Win Prune ═══
@@ -272,11 +356,10 @@ def evaluate_promotion(candidate, dispatch_table, baseline, current_metrics, wor
     trial_ratios = {}
     for M, N, K in ALL_SHAPES:
         sk = shape_key(M, N, K)
-        from search_space import is_valid_config
-        if not is_valid_config(M, N, K, candidate.BLOCK_M, candidate.BLOCK_N,
-                               candidate.BLOCK_K, candidate.num_stages, candidate.num_warps):
-            continue
-        time_us = bench_config_all_templates(M, N, K, candidate, num_iters=200)[0]
+        time_us = bench_one_template(
+            M, N, K, candidate.gemm, candidate.template,
+            num_iters=PROMOTION_NUM_ITERS, dtype=AUTOTUNE_DTYPE,
+        )
         if time_us is not None:
             baseline_time = baseline.get(sk, {}).get("time_us", time_us)
             trial_ratios[sk] = baseline_time / time_us if time_us > 0 else 0
@@ -339,8 +422,15 @@ def step_iterate():
     """Main worst-first iteration loop."""
     STATE_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Load baseline
-    if not BASELINE_FILE.exists():
+    # Load baseline.  An interrupted incremental baseline write may exist but
+    # still be incomplete, so resume Step 0 rather than using partial ratios.
+    baseline_complete = False
+    if BASELINE_FILE.exists():
+        existing_baseline = json.loads(BASELINE_FILE.read_text())
+        baseline_complete = all(
+            shape_key(M, N, K) in existing_baseline for M, N, K in ALL_SHAPES
+        )
+    if not baseline_complete:
         print("No baseline found, running step_baseline first...")
         step_baseline()
     baseline = json.loads(BASELINE_FILE.read_text())
@@ -349,7 +439,7 @@ def step_iterate():
     if not DISPATCH_FILE.exists():
         print("No dispatch table found, running step_seed first...")
         step_seed()
-    dispatch_table = [GemmConfig.from_dict(d) for d in json.loads(DISPATCH_FILE.read_text())]
+    dispatch_table = [DispatchConfig.from_dict(d) for d in json.loads(DISPATCH_FILE.read_text())]
 
     # Load iteration log
     log_entries = []
@@ -409,7 +499,7 @@ def step_iterate():
         for candidate, cand_time in search_results[:5]:
             if candidate in dispatch_table:
                 continue
-            print(f"\n  Evaluating: {candidate} BM={candidate.BLOCK_M} BN={candidate.BLOCK_N} "
+            print(f"\n  Evaluating: template={candidate.template} BM={candidate.BLOCK_M} BN={candidate.BLOCK_N} "
                   f"BK={candidate.BLOCK_K} NS={candidate.num_stages} NW={candidate.num_warps} "
                   f"(time={cand_time:.1f}us on worst shape)")
 
@@ -464,34 +554,42 @@ def step_report():
         print("No dispatch table found!")
         return
 
-    dispatch_table = [GemmConfig.from_dict(d) for d in json.loads(DISPATCH_FILE.read_text())]
+    dispatch_table = [DispatchConfig.from_dict(d) for d in json.loads(DISPATCH_FILE.read_text())]
     baseline = json.loads(BASELINE_FILE.read_text()) if BASELINE_FILE.exists() else {}
 
     print(f"\n{'='*70}")
     print(f"FINAL DISPATCH TABLE ({len(dispatch_table)} configs)")
     print(f"{'='*70}")
     for i, c in enumerate(dispatch_table):
-        print(f"  {i+1}. BM={c.BLOCK_M:>3} BN={c.BLOCK_N:>3} "
+        print(f"  {i+1}. template={c.template:<15} BM={c.BLOCK_M:>3} BN={c.BLOCK_N:>3} "
               f"BK={c.BLOCK_K:>3} NS={c.num_stages} NW={c.num_warps:>2}")
 
     # Generate heuristic code
     print(f"\n{'='*70}")
     print("HEURISTIC CODE (paste into template_heuristics/triton.py):")
     print(f"{'='*70}")
-    print("self.mm_configs = [")
-    for c in dispatch_table:
-        print(f"    GemmConfig({c.BLOCK_M}, {c.BLOCK_N}, {c.BLOCK_K}, "
-              f"{c.num_stages}, {c.num_warps}),")
-    print("]")
+    for template in TEMPLATES:
+        print(f"\n# {template}")
+        print("self.mm_configs = [")
+        for c in dispatch_table:
+            if c.template == template:
+                print(f"    GemmConfig({c.BLOCK_M}, {c.BLOCK_N}, {c.BLOCK_K}, "
+                      f"{c.num_stages}, {c.num_warps}),")
+        print("]")
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--step", choices=["baseline", "seed", "iterate", "report", "all"],
                         default="all")
+    parser.add_argument(
+        "--dtype", choices=("int8", "bf16", "fp16"), default="int8",
+        help="autotune dtype; state is isolated per dtype",
+    )
     args = parser.parse_args()
 
     os.chdir(Path(__file__).parent)
+    configure_dtype(args.dtype)
 
     if args.step == "baseline" or args.step == "all":
         step_baseline()

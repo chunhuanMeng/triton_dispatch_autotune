@@ -1,0 +1,2160 @@
+{
+  "1,1024,4096": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.07189427,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.09257161,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,1536,2048": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.07588385,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.07785156,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,2048,768": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.03877682,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.03787474,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,2048,1408": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.036675519999999996,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.039003384999999995,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,2816,2048": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.038111195,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.036979165,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,3072,4096": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.04886302,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.04862578,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,3584,2560": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.07573932,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.03741094,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,4096,1536": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.07675469,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.07736849,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,4096,4096": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.07590129999999999,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.07748932,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,4096,7168": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.13451927,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.1342013,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,4096,14336": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.26441875,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.26433828,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,5120,3584": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.08336249999999999,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.08374791999999999,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,6144,16384": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.452659635,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.44816588499999993,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,7168,2048": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.062559115,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.062367189999999996,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,14336,4096": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.266259115,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.26615703,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,28672,4096": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.5269950499999999,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.52655573,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "1,32768,6144": {
+    "A": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.8984580699999999,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    },
+    "B": {
+      "decomposed": true,
+      "note": "mm decomposed to elementwise+reduction; no template/autotune choices involved, A==B by construction",
+      "elapsed_ms": 0.898646095,
+      "onednn": null,
+      "best_triton": null,
+      "num_choices": 0,
+      "num_triton_choices": 0
+    }
+  },
+  "2,4096,4096": {
+    "A": {
+      "onednn": 0.133803,
+      "onednn_name": "mm",
+      "best_triton": 0.130157,
+      "best_triton_name": "triton_mm_3",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.134063,
+      "onednn_name": "mm",
+      "best_triton": 0.129792,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,1536,2048": {
+    "A": {
+      "onednn": 0.034582999999999996,
+      "onednn_name": "mm",
+      "best_triton": 0.034739,
+      "best_triton_name": "triton_mm_19",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.036146,
+      "onednn_name": "mm",
+      "best_triton": 0.028749999999999998,
+      "best_triton_name": "triton_mm_bmg_tiled2d_8",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,2048,768": {
+    "A": {
+      "onednn": 0.019271,
+      "onednn_name": "mm",
+      "best_triton": 0.017917,
+      "best_triton_name": "triton_mm_2",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.019115,
+      "onednn_name": "mm",
+      "best_triton": 0.012969,
+      "best_triton_name": "triton_mm_bmg_tiled2d_9",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,2048,1408": {
+    "A": {
+      "onednn": 0.076042,
+      "onednn_name": "mm",
+      "best_triton": 0.028489,
+      "best_triton_name": "triton_mm_7",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.032552,
+      "onednn_name": "mm",
+      "best_triton": 0.026302,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,2816,2048": {
+    "A": {
+      "onednn": 0.134427,
+      "onednn_name": "mm",
+      "best_triton": 0.076459,
+      "best_triton_name": "triton_mm_7",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.131875,
+      "onednn_name": "mm",
+      "best_triton": 0.068698,
+      "best_triton_name": "triton_mm_bmg_tiled2d_8",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,3072,4096": {
+    "A": {
+      "onednn": 0.135312,
+      "onednn_name": "mm",
+      "best_triton": 0.111927,
+      "best_triton_name": "triton_mm_3",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.11229199999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.10739599999999999,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,3584,2560": {
+    "A": {
+      "onednn": 0.089844,
+      "onednn_name": "mm",
+      "best_triton": 0.084739,
+      "best_triton_name": "triton_mm_3",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.090469,
+      "onednn_name": "mm",
+      "best_triton": 0.081927,
+      "best_triton_name": "triton_mm_bmg_tiled2d_9",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,4096,1536": {
+    "A": {
+      "onednn": 0.065677,
+      "onednn_name": "mm",
+      "best_triton": 0.062552,
+      "best_triton_name": "triton_mm_2",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.066042,
+      "onednn_name": "mm",
+      "best_triton": 0.063281,
+      "best_triton_name": "triton_mm_bmg_tiled2d_9",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,4096,4096": {
+    "A": {
+      "onednn": 0.1325,
+      "onednn_name": "mm",
+      "best_triton": 0.12906299999999998,
+      "best_triton_name": "triton_mm_3",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.13197899999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.12739599999999998,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,4096,7168": {
+    "A": {
+      "onednn": 0.192709,
+      "onednn_name": "mm",
+      "best_triton": 0.189636,
+      "best_triton_name": "triton_mm_18",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.192917,
+      "onednn_name": "mm",
+      "best_triton": 0.185885,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,4096,14336": {
+    "A": {
+      "onednn": 0.32536499999999996,
+      "onednn_name": "mm",
+      "best_triton": 0.319948,
+      "best_triton_name": "triton_mm_18",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.32125,
+      "onednn_name": "mm",
+      "best_triton": 0.315833,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,5120,3584": {
+    "A": {
+      "onednn": 0.14125,
+      "onednn_name": "mm",
+      "best_triton": 0.136354,
+      "best_triton_name": "triton_mm_7",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.193385,
+      "onednn_name": "mm",
+      "best_triton": 0.134166,
+      "best_triton_name": "triton_mm_bmg_tiled2d_9",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,6144,16384": {
+    "A": {
+      "onednn": 0.513177,
+      "onednn_name": "mm",
+      "best_triton": 0.5178119999999999,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.511927,
+      "onednn_name": "mm",
+      "best_triton": 0.500364,
+      "best_triton_name": "triton_mm_bmg_tiled2d_7",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,7168,2048": {
+    "A": {
+      "onednn": 0.125989,
+      "onednn_name": "mm",
+      "best_triton": 0.11989599999999999,
+      "best_triton_name": "triton_mm_3",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.17427099999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.12072899999999999,
+      "best_triton_name": "triton_mm_bmg_tiled2d_9",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,28672,4096": {
+    "A": {
+      "onednn": 0.577552,
+      "onednn_name": "mm",
+      "best_triton": 0.59276,
+      "best_triton_name": "triton_mm_9",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.577708,
+      "onednn_name": "mm",
+      "best_triton": 0.57375,
+      "best_triton_name": "triton_mm_bmg_tiled2d_7",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "4,32768,6144": {
+    "A": {
+      "onednn": 1.0293219999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.9854689999999999,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 1.015781,
+      "onednn_name": "mm",
+      "best_triton": 0.9481769999999999,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "8,4096,4096": {
+    "A": {
+      "onednn": 0.13401,
+      "onednn_name": "mm",
+      "best_triton": 0.131042,
+      "best_triton_name": "triton_mm_3",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.133959,
+      "onednn_name": "mm",
+      "best_triton": 0.12989499999999998,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "16,4096,4096": {
+    "A": {
+      "onednn": 0.14802099999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.12822899999999998,
+      "best_triton_name": "triton_mm_3",
+      "num_choices": 21,
+      "num_triton_choices": 20
+    },
+    "B": {
+      "onednn": 0.146875,
+      "onednn_name": "mm",
+      "best_triton": 0.130677,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,1536,2048": {
+    "A": {
+      "onednn": 0.036146,
+      "onednn_name": "mm",
+      "best_triton": 0.035625,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.067343,
+      "onednn_name": "mm",
+      "best_triton": 0.039009999999999996,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,2048,768": {
+    "A": {
+      "onednn": 0.021301999999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.016822999999999998,
+      "best_triton_name": "triton_mm_5",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.021563,
+      "onednn_name": "mm",
+      "best_triton": 0.027187,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,2048,1408": {
+    "A": {
+      "onednn": 0.126771,
+      "onednn_name": "mm",
+      "best_triton": 0.033645999999999995,
+      "best_triton_name": "triton_mm_19",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.063229,
+      "onednn_name": "mm",
+      "best_triton": 0.032084,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,2816,2048": {
+    "A": {
+      "onednn": 0.093125,
+      "onednn_name": "mm",
+      "best_triton": 0.055208,
+      "best_triton_name": "triton_mm_3",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.069323,
+      "onednn_name": "mm",
+      "best_triton": 0.053959,
+      "best_triton_name": "triton_mm_bmg_tiled2d_8",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,3072,4096": {
+    "A": {
+      "onednn": 0.17198,
+      "onednn_name": "mm",
+      "best_triton": 0.10973899999999999,
+      "best_triton_name": "triton_mm_3",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.172448,
+      "onednn_name": "mm",
+      "best_triton": 0.10911399999999999,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,3584,2560": {
+    "A": {
+      "onednn": 0.094375,
+      "onednn_name": "mm",
+      "best_triton": 0.087084,
+      "best_triton_name": "triton_mm_3",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.122656,
+      "onednn_name": "mm",
+      "best_triton": 0.08947899999999999,
+      "best_triton_name": "triton_mm_bmg_persistent_5",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,4096,1536": {
+    "A": {
+      "onednn": 0.113229,
+      "onednn_name": "mm",
+      "best_triton": 0.06557299999999999,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.066875,
+      "onednn_name": "mm",
+      "best_triton": 0.058906,
+      "best_triton_name": "triton_mm_bmg_tiled2d_8",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,4096,4096": {
+    "A": {
+      "onednn": 0.144948,
+      "onednn_name": "mm",
+      "best_triton": 0.13125,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.145312,
+      "onednn_name": "mm",
+      "best_triton": 0.129688,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,4096,7168": {
+    "A": {
+      "onednn": 0.216667,
+      "onednn_name": "mm",
+      "best_triton": 0.188437,
+      "best_triton_name": "triton_mm_14",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.199271,
+      "onednn_name": "mm",
+      "best_triton": 0.189166,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,4096,14336": {
+    "A": {
+      "onednn": 0.364948,
+      "onednn_name": "mm",
+      "best_triton": 0.328021,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.359427,
+      "onednn_name": "mm",
+      "best_triton": 0.320365,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,5120,3584": {
+    "A": {
+      "onednn": 0.19156199999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.13880299999999998,
+      "best_triton_name": "triton_mm_7",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.146302,
+      "onednn_name": "mm",
+      "best_triton": 0.138281,
+      "best_triton_name": "triton_mm_bmg_tiled2d_8",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,6144,16384": {
+    "A": {
+      "onednn": 1.064427,
+      "onednn_name": "mm",
+      "best_triton": 0.508541,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 1.0583339999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.508593,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,7168,2048": {
+    "A": {
+      "onednn": 0.136875,
+      "onednn_name": "mm",
+      "best_triton": 0.119115,
+      "best_triton_name": "triton_mm_13",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.130625,
+      "onednn_name": "mm",
+      "best_triton": 0.12109299999999999,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,28672,4096": {
+    "A": {
+      "onednn": 0.636354,
+      "onednn_name": "mm",
+      "best_triton": 0.598125,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.634166,
+      "onednn_name": "mm",
+      "best_triton": 0.598646,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "32,32768,6144": {
+    "A": {
+      "onednn": 1.024375,
+      "onednn_name": "mm",
+      "best_triton": 0.975364,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 1.247344,
+      "onednn_name": "mm",
+      "best_triton": 0.9840629999999999,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "64,4096,4096": {
+    "A": {
+      "onednn": 0.161094,
+      "onednn_name": "mm",
+      "best_triton": 0.132604,
+      "best_triton_name": "triton_mm_14",
+      "num_choices": 22,
+      "num_triton_choices": 21
+    },
+    "B": {
+      "onednn": 0.15140599999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.130364,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,1536,2048": {
+    "A": {
+      "onednn": 0.037031,
+      "onednn_name": "mm",
+      "best_triton": 0.035261,
+      "best_triton_name": "triton_mm_22",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.071146,
+      "onednn_name": "mm",
+      "best_triton": 0.06411499999999999,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,2048,768": {
+    "A": {
+      "onednn": 0.020312999999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.021613999999999998,
+      "best_triton_name": "triton_mm_2",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.021769999999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.021093999999999998,
+      "best_triton_name": "triton_mm_bmg_persistent_4",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,2048,1408": {
+    "A": {
+      "onednn": 0.034323,
+      "onednn_name": "mm",
+      "best_triton": 0.036823,
+      "best_triton_name": "triton_mm_5",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.035207999999999996,
+      "onednn_name": "mm",
+      "best_triton": 0.06729199999999999,
+      "best_triton_name": "triton_mm_2",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,2816,2048": {
+    "A": {
+      "onednn": 0.06895899999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.061926999999999996,
+      "best_triton_name": "triton_mm_10",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.070833,
+      "onednn_name": "mm",
+      "best_triton": 0.066354,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,3072,4096": {
+    "A": {
+      "onednn": 0.11588499999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.11354199999999999,
+      "best_triton_name": "triton_mm_22",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.12390599999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.115312,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,3584,2560": {
+    "A": {
+      "onednn": 0.09687499999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.09239499999999999,
+      "best_triton_name": "triton_mm_7",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.095,
+      "onednn_name": "mm",
+      "best_triton": 0.09307299999999999,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,4096,1536": {
+    "A": {
+      "onednn": 0.11354199999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.07109399999999999,
+      "best_triton_name": "triton_mm_21",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.070834,
+      "onednn_name": "mm",
+      "best_triton": 0.068802,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,4096,4096": {
+    "A": {
+      "onednn": 0.164896,
+      "onednn_name": "mm",
+      "best_triton": 0.138073,
+      "best_triton_name": "triton_mm_10",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.14130199999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.13776,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,4096,7168": {
+    "A": {
+      "onednn": 0.194844,
+      "onednn_name": "mm",
+      "best_triton": 0.19755199999999998,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.19322899999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.194323,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,4096,14336": {
+    "A": {
+      "onednn": 0.363386,
+      "onednn_name": "mm",
+      "best_triton": 0.34046899999999997,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.326719,
+      "onednn_name": "mm",
+      "best_triton": 0.32911399999999996,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,5120,3584": {
+    "A": {
+      "onednn": 0.147865,
+      "onednn_name": "mm",
+      "best_triton": 0.14224,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.155781,
+      "onednn_name": "mm",
+      "best_triton": 0.14375,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,6144,16384": {
+    "A": {
+      "onednn": 0.76125,
+      "onednn_name": "mm",
+      "best_triton": 1.144062,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.6704169999999999,
+      "onednn_name": "mm",
+      "best_triton": 1.1652609999999999,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,7168,2048": {
+    "A": {
+      "onednn": 0.171042,
+      "onednn_name": "mm",
+      "best_triton": 0.134323,
+      "best_triton_name": "triton_mm_10",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.128282,
+      "onednn_name": "mm",
+      "best_triton": 0.128073,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,28672,4096": {
+    "A": {
+      "onednn": 0.650938,
+      "onednn_name": "mm",
+      "best_triton": 0.637656,
+      "best_triton_name": "triton_mm_13",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.651458,
+      "onednn_name": "mm",
+      "best_triton": 0.9269799999999999,
+      "best_triton_name": "triton_mm_2",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "128,32768,6144": {
+    "A": {
+      "onednn": 1.390417,
+      "onednn_name": "mm",
+      "best_triton": 2.9993749999999997,
+      "best_triton_name": "triton_mm_9",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 1.408073,
+      "onednn_name": "mm",
+      "best_triton": 1.606458,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "256,4096,4096": {
+    "A": {
+      "onednn": 0.189531,
+      "onednn_name": "mm",
+      "best_triton": 0.285416,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.182916,
+      "onednn_name": "mm",
+      "best_triton": 0.254584,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,1536,2048": {
+    "A": {
+      "onednn": 0.08562499999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.208229,
+      "best_triton_name": "triton_mm_5",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.08692699999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.15526099999999998,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,2048,768": {
+    "A": {
+      "onednn": 0.06375,
+      "onednn_name": "mm",
+      "best_triton": 0.125833,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.060208,
+      "onednn_name": "mm",
+      "best_triton": 0.111042,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,2048,1408": {
+    "A": {
+      "onednn": 0.081979,
+      "onednn_name": "mm",
+      "best_triton": 0.180729,
+      "best_triton_name": "triton_mm_9",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.081615,
+      "onednn_name": "mm",
+      "best_triton": 0.133854,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,2816,2048": {
+    "A": {
+      "onednn": 0.14698,
+      "onednn_name": "mm",
+      "best_triton": 0.116823,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.136042,
+      "onednn_name": "mm",
+      "best_triton": 0.28223899999999996,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,3072,4096": {
+    "A": {
+      "onednn": 0.28312499999999996,
+      "onednn_name": "mm",
+      "best_triton": 0.240417,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.214635,
+      "onednn_name": "mm",
+      "best_triton": 0.22656199999999999,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,3584,2560": {
+    "A": {
+      "onednn": 0.19651,
+      "onednn_name": "mm",
+      "best_triton": 0.146979,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.222239,
+      "onednn_name": "mm",
+      "best_triton": 0.13125,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,4096,1536": {
+    "A": {
+      "onednn": 0.141146,
+      "onednn_name": "mm",
+      "best_triton": 0.109063,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.12135399999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.111302,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,4096,4096": {
+    "A": {
+      "onednn": 0.23546799999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.240365,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.348281,
+      "onednn_name": "mm",
+      "best_triton": 0.242552,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,4096,7168": {
+    "A": {
+      "onednn": 0.399479,
+      "onednn_name": "mm",
+      "best_triton": 0.405781,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.40249999999999997,
+      "onednn_name": "mm",
+      "best_triton": 0.404895,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,4096,14336": {
+    "A": {
+      "onednn": 0.743907,
+      "onednn_name": "mm",
+      "best_triton": 0.844479,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.739427,
+      "onednn_name": "mm",
+      "best_triton": 0.800105,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,4096,16384": {
+    "A": {
+      "onednn": 0.816093,
+      "onednn_name": "mm",
+      "best_triton": 1.142032,
+      "best_triton_name": "triton_mm_13",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.819583,
+      "onednn_name": "mm",
+      "best_triton": 0.897188,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,5120,3584": {
+    "A": {
+      "onednn": 0.21567699999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.21906299999999998,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.209895,
+      "onednn_name": "mm",
+      "best_triton": 0.222136,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,5120,5120": {
+    "A": {
+      "onednn": 0.29114599999999996,
+      "onednn_name": "mm",
+      "best_triton": 0.29953199999999996,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.289948,
+      "onednn_name": "mm",
+      "best_triton": 0.30156299999999997,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,5120,20480": {
+    "A": {
+      "onednn": 1.1105209999999999,
+      "onednn_name": "mm",
+      "best_triton": 1.192396,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 1.1110419999999999,
+      "onednn_name": "mm",
+      "best_triton": 1.1199999999999999,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,6144,16384": {
+    "A": {
+      "onednn": 1.610156,
+      "onednn_name": "mm",
+      "best_triton": 2.555157,
+      "best_triton_name": "triton_mm_13",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 1.6144269999999998,
+      "onednn_name": "mm",
+      "best_triton": 1.849167,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,7168,2048": {
+    "A": {
+      "onednn": 0.27041699999999996,
+      "onednn_name": "mm",
+      "best_triton": 0.207083,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.187969,
+      "onednn_name": "mm",
+      "best_triton": 0.20640699999999998,
+      "best_triton_name": "triton_mm_2",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,7168,7168": {
+    "A": {
+      "onednn": 0.595521,
+      "onednn_name": "mm",
+      "best_triton": 0.606615,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.594687,
+      "onednn_name": "mm",
+      "best_triton": 0.611771,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,7168,28672": {
+    "A": {
+      "onednn": 2.439323,
+      "onednn_name": "mm",
+      "best_triton": 2.74125,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 2.479271,
+      "onednn_name": "mm",
+      "best_triton": 2.3308329999999997,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,28672,4096": {
+    "A": {
+      "onednn": 1.2818749999999999,
+      "onednn_name": "mm",
+      "best_triton": 1.3698949999999999,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 1.5389059999999999,
+      "onednn_name": "mm",
+      "best_triton": 1.335833,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "512,32768,6144": {
+    "A": {
+      "onednn": 2.2118219999999997,
+      "onednn_name": "mm",
+      "best_triton": 2.64125,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 2.2096869999999997,
+      "onednn_name": "mm",
+      "best_triton": 2.428906,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "1024,1024,4096": {
+    "A": {
+      "onednn": 0.178229,
+      "onednn_name": "mm",
+      "best_triton": 0.137291,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.1775,
+      "onednn_name": "mm",
+      "best_triton": 0.12343699999999999,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "1024,4096,4096": {
+    "A": {
+      "onednn": 0.390209,
+      "onednn_name": "mm",
+      "best_triton": 0.461979,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.45349,
+      "onednn_name": "mm",
+      "best_triton": 0.42229099999999997,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "1024,4096,14336": {
+    "A": {
+      "onednn": 1.269062,
+      "onednn_name": "mm",
+      "best_triton": 1.826355,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 1.2715109999999998,
+      "onednn_name": "mm",
+      "best_triton": 1.386458,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "1024,4096,16384": {
+    "A": {
+      "onednn": 1.4430729999999998,
+      "onednn_name": "mm",
+      "best_triton": 2.688802,
+      "best_triton_name": "triton_mm_9",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 1.4425519999999998,
+      "onednn_name": "mm",
+      "best_triton": 1.572187,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "1024,5120,5120": {
+    "A": {
+      "onednn": 0.5617179999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.622292,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.561666,
+      "onednn_name": "mm",
+      "best_triton": 0.587865,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "1024,5120,20480": {
+    "A": {
+      "onednn": 2.2009369999999997,
+      "onednn_name": "mm",
+      "best_triton": 3.193489,
+      "best_triton_name": "triton_mm_13",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 2.200104,
+      "onednn_name": "mm",
+      "best_triton": 2.223281,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "1024,7168,7168": {
+    "A": {
+      "onednn": 1.1210419999999999,
+      "onednn_name": "mm",
+      "best_triton": 1.213489,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 1.118906,
+      "onednn_name": "mm",
+      "best_triton": 1.202604,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "1024,7168,28672": {
+    "A": {
+      "onednn": 4.336614,
+      "onednn_name": "mm",
+      "best_triton": 7.699218999999999,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 4.336354,
+      "onednn_name": "mm",
+      "best_triton": 4.638853999999999,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "1024,14336,4096": {
+    "A": {
+      "onednn": 1.279792,
+      "onednn_name": "mm",
+      "best_triton": 1.370573,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 1.2785419999999998,
+      "onednn_name": "mm",
+      "best_triton": 1.344895,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,1536,2048": {
+    "A": {
+      "onednn": 0.179636,
+      "onednn_name": "mm",
+      "best_triton": 0.17557299999999998,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.18026,
+      "onednn_name": "mm",
+      "best_triton": 0.178697,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,2048,768": {
+    "A": {
+      "onednn": 0.143542,
+      "onednn_name": "mm",
+      "best_triton": 0.094635,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.138698,
+      "onednn_name": "mm",
+      "best_triton": 0.10828099999999999,
+      "best_triton_name": "triton_mm_bmg_tiled2d_7",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,2048,1408": {
+    "A": {
+      "onednn": 0.23770899999999998,
+      "onednn_name": "mm",
+      "best_triton": 0.17885399999999999,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.2375,
+      "onednn_name": "mm",
+      "best_triton": 0.173542,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,2048,2048": {
+    "A": {
+      "onednn": 0.335833,
+      "onednn_name": "mm",
+      "best_triton": 0.229844,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.335885,
+      "onednn_name": "mm",
+      "best_triton": 0.23557299999999998,
+      "best_triton_name": "triton_mm_bmg_persistent_4",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,2816,2048": {
+    "A": {
+      "onednn": 0.29562499999999997,
+      "onednn_name": "mm",
+      "best_triton": 0.32375,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.44343699999999997,
+      "onednn_name": "mm",
+      "best_triton": 0.305677,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,3072,4096": {
+    "A": {
+      "onednn": 0.583073,
+      "onednn_name": "mm",
+      "best_triton": 0.6074999999999999,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.8649479999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.608854,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,3584,2560": {
+    "A": {
+      "onednn": 0.435625,
+      "onednn_name": "mm",
+      "best_triton": 0.470261,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.656771,
+      "onednn_name": "mm",
+      "best_triton": 0.46541699999999997,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,4096,1536": {
+    "A": {
+      "onednn": 0.314895,
+      "onednn_name": "mm",
+      "best_triton": 0.338281,
+      "best_triton_name": "triton_mm_6",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.47255199999999997,
+      "onednn_name": "mm",
+      "best_triton": 0.32125,
+      "best_triton_name": "triton_mm_bmg_tiled2d_10",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,4096,4096": {
+    "A": {
+      "onednn": 0.786198,
+      "onednn_name": "mm",
+      "best_triton": 0.80401,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.789063,
+      "onednn_name": "mm",
+      "best_triton": 0.7823439999999999,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,4096,7168": {
+    "A": {
+      "onednn": 1.274063,
+      "onednn_name": "mm",
+      "best_triton": 1.436458,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 1.275364,
+      "onednn_name": "mm",
+      "best_triton": 1.315886,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,4096,14336": {
+    "A": {
+      "onednn": 2.8442179999999997,
+      "onednn_name": "mm",
+      "best_triton": 3.543646,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 2.857291,
+      "onednn_name": "mm",
+      "best_triton": 2.7284379999999997,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,4096,16384": {
+    "A": {
+      "onednn": 3.2394279999999998,
+      "onednn_name": "mm",
+      "best_triton": 5.500156,
+      "best_triton_name": "triton_mm_9",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 3.246823,
+      "onednn_name": "mm",
+      "best_triton": 3.028854,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,5120,3584": {
+    "A": {
+      "onednn": 0.793593,
+      "onednn_name": "mm",
+      "best_triton": 0.8329679999999999,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.7959379999999999,
+      "onednn_name": "mm",
+      "best_triton": 0.834062,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,5120,5120": {
+    "A": {
+      "onednn": 1.123541,
+      "onednn_name": "mm",
+      "best_triton": 1.18052,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 1.1204159999999999,
+      "onednn_name": "mm",
+      "best_triton": 1.1547399999999999,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,5120,20480": {
+    "A": {
+      "onednn": 4.394947999999999,
+      "onednn_name": "mm",
+      "best_triton": 7.298280999999999,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 4.39724,
+      "onednn_name": "mm",
+      "best_triton": 4.43724,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,6144,16384": {
+    "A": {
+      "onednn": 6.442291,
+      "onednn_name": "mm",
+      "best_triton": 15.167499999999999,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 5.766354,
+      "onednn_name": "mm",
+      "best_triton": 6.073646,
+      "best_triton_name": "triton_mm_0",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,6656,16384": {
+    "A": {
+      "onednn": 4.6322399999999995,
+      "onednn_name": "mm",
+      "best_triton": 8.55698,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 4.6399479999999995,
+      "onednn_name": "mm",
+      "best_triton": 4.897135,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,7168,2048": {
+    "A": {
+      "onednn": 0.693021,
+      "onednn_name": "mm",
+      "best_triton": 0.732448,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 0.691406,
+      "onednn_name": "mm",
+      "best_triton": 0.721094,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,7168,7168": {
+    "A": {
+      "onednn": 2.4234899999999997,
+      "onednn_name": "mm",
+      "best_triton": 2.3663019999999997,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 2.424219,
+      "onednn_name": "mm",
+      "best_triton": 2.291771,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,7168,28672": {
+    "A": {
+      "onednn": 8.630573,
+      "onednn_name": "mm",
+      "best_triton": 15.495156999999999,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 8.631146,
+      "onednn_name": "mm",
+      "best_triton": 9.273437,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,28672,4096": {
+    "A": {
+      "onednn": 5.014062,
+      "onednn_name": "mm",
+      "best_triton": 5.126926999999999,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 5.016198,
+      "onednn_name": "mm",
+      "best_triton": 5.102342999999999,
+      "best_triton_name": "triton_mm_bmg_persistent_3",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  },
+  "2048,32768,6144": {
+    "A": {
+      "onednn": 9.535416999999999,
+      "onednn_name": "mm",
+      "best_triton": 9.288802,
+      "best_triton_name": "triton_mm_15",
+      "num_choices": 24,
+      "num_triton_choices": 23
+    },
+    "B": {
+      "onednn": 9.264166999999999,
+      "onednn_name": "mm",
+      "best_triton": 8.900364999999999,
+      "best_triton_name": "triton_mm_1",
+      "num_choices": 12,
+      "num_triton_choices": 11
+    }
+  }
+}

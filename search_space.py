@@ -16,6 +16,63 @@ NUM_WARPS_CANDIDATES = [4, 8, 16, 32]
 # Templates: each template will be tested independently with the same config set
 TEMPLATES = ["triton_mm", "bmg_persistent", "bmg_decode"]
 
+# These are the template-specific config lists in Inductor's BMG heuristics.
+BMG_PERSISTENT_CONFIGS = [
+    (256, 128, 64, 3, 16),
+    (256, 256, 64, 2, 32),
+    (128, 512, 64, 2, 32),
+    (256, 256, 128, 2, 32),
+    (32, 256, 32, 2, 8),
+    (8, 512, 32, 2, 8),
+    (8, 512, 32, 2, 16),
+]
+BMG_DECODE_CONFIGS = [
+    (32, 256, 32, 2, 8),
+    (8, 512, 32, 2, 8),
+    (8, 512, 32, 2, 16),
+]
+
+# These are the standard XPU Triton choices in Inductor.  Keep the worker
+# search space identical to the corresponding heuristic instead of searching
+# the generic Cartesian product and later producing configs that Inductor will
+# never register.
+STANDARD_INT8_CONFIGS = [
+    (64, 64, 32, 2, 4),
+    (64, 128, 32, 3, 4),
+    (128, 64, 32, 3, 4),
+    (64, 128, 32, 4, 8),
+    (128, 64, 32, 4, 8),
+    (64, 32, 32, 5, 8),
+    (32, 64, 32, 5, 8),
+    (128, 128, 32, 2, 8),
+    (64, 64, 64, 3, 8),
+    (128, 256, 128, 3, 8),
+    (256, 128, 128, 3, 8),
+]
+STANDARD_FLOAT_CONFIGS = [
+    (32, 32, 16, 1, 2),
+    (32, 32, 128, 2, 4),
+    (32, 64, 32, 5, 8),
+    (64, 32, 32, 5, 8),
+    (64, 32, 128, 5, 4),
+    (64, 64, 16, 2, 4),
+    (64, 64, 32, 2, 4),
+    (64, 64, 64, 3, 8),
+    (64, 64, 128, 5, 4),
+    (64, 128, 32, 3, 4),
+    (64, 128, 32, 4, 8),
+    (64, 128, 64, 3, 4),
+    (64, 128, 128, 4, 4),
+    (128, 64, 32, 3, 4),
+    (128, 64, 32, 4, 8),
+    (128, 128, 32, 2, 8),
+    (128, 128, 32, 3, 4),
+    (128, 128, 64, 3, 4),
+    (128, 128, 64, 5, 8),
+    (128, 128, 128, 4, 8),
+    (128, 256, 64, 4, 8),
+]
+
 
 # ═══ Config Dataclass (5-dim, no template) ═══
 @dataclass(frozen=True)
@@ -45,6 +102,48 @@ class GemmConfig:
 
     def __str__(self):
         return f"BM={self.BLOCK_M} BN={self.BLOCK_N} BK={self.BLOCK_K} NS={self.num_stages} NW={self.num_warps}"
+
+
+@dataclass(frozen=True)
+class DispatchConfig:
+    """Six-dimensional dispatch key: template + five GEMM parameters."""
+
+    template: str
+    gemm: GemmConfig
+
+    @property
+    def BLOCK_M(self):
+        return self.gemm.BLOCK_M
+
+    @property
+    def BLOCK_N(self):
+        return self.gemm.BLOCK_N
+
+    @property
+    def BLOCK_K(self):
+        return self.gemm.BLOCK_K
+
+    @property
+    def num_stages(self):
+        return self.gemm.num_stages
+
+    @property
+    def num_warps(self):
+        return self.gemm.num_warps
+
+    @property
+    def key(self):
+        return (self.template, *self.gemm.key)
+
+    def to_dict(self):
+        return {"template": self.template, **self.gemm.to_dict()}
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(data["template"], GemmConfig.from_dict(data))
+
+    def __str__(self):
+        return f"{self.template}:{self.gemm}"
 
 
 def is_valid_config(M, N, K, bm, bn, bk, ns, nw):
@@ -133,6 +232,47 @@ def generate_valid_configs(M, N, K):
     return configs
 
 
+def generate_template_configs(M, N, K, template):
+    """Return the same candidate list as Inductor for the requested template."""
+    if template == "bmg_persistent":
+        candidates = BMG_PERSISTENT_CONFIGS
+    elif template == "bmg_decode":
+        candidates = BMG_DECODE_CONFIGS
+    else:
+        return generate_valid_configs(M, N, K)
+
+    # Inductor's BMG heuristics intentionally keep these candidates even when
+    # a generic shape heuristic would reject a large BLOCK_M for small M.
+    return [GemmConfig(*values) for values in candidates]
+
+
+def template_config_keys(template, dtype="int8"):
+    """Return the exact config keys registered by Inductor for a template."""
+    if template == "triton_mm":
+        values = STANDARD_INT8_CONFIGS if dtype == "int8" else STANDARD_FLOAT_CONFIGS
+    elif template == "bmg_persistent":
+        values = BMG_PERSISTENT_CONFIGS
+    elif template == "bmg_decode":
+        values = BMG_DECODE_CONFIGS
+    else:
+        return set()
+    return {tuple(v) for v in values}
+
+
+def generate_autotune_configs(M, N, K, dtype="int8"):
+    """Union of the exact standard and BMG Inductor candidate sets."""
+    configs = {}
+    for template in TEMPLATES:
+        for config in generate_template_configs(M, N, K, template) if template != "triton_mm" else [GemmConfig(*v) for v in (STANDARD_INT8_CONFIGS if dtype == "int8" else STANDARD_FLOAT_CONFIGS)]:
+            if template == "triton_mm" and not is_valid_config(
+                M, N, K, config.BLOCK_M, config.BLOCK_N, config.BLOCK_K,
+                config.num_stages, config.num_warps
+            ):
+                continue
+            configs[config.key] = config
+    return list(configs.values())
+
+
 def generate_good_configs(M, N, K):
     """Generate configs that pass both validity and conservative goodness check."""
     configs = []
@@ -148,11 +288,14 @@ def generate_good_configs(M, N, K):
 
 # ═══ Shape List ═══
 ALL_SHAPES = [
-    (1, 1024, 4096), (1, 1536, 2048), (1, 2048, 768), (1, 2048, 1408),
-    (1, 2816, 2048), (1, 3072, 4096), (1, 3584, 2560), (1, 4096, 1536),
-    (1, 4096, 4096), (1, 4096, 7168), (1, 4096, 14336), (1, 5120, 3584),
-    (1, 6144, 16384), (1, 7168, 2048), (1, 14336, 4096), (1, 28672, 4096),
-    (1, 32768, 6144),
+    # M=1 is decomposed by Inductor into elementwise/reduction kernels and
+    # never reaches MM template autotuning. Keep these shapes documented but
+    # exclude them from the template/config search and dispatch evaluation.
+    # (1, 1024, 4096), (1, 1536, 2048), (1, 2048, 768), (1, 2048, 1408),
+    # (1, 2816, 2048), (1, 3072, 4096), (1, 3584, 2560), (1, 4096, 1536),
+    # (1, 4096, 4096), (1, 4096, 7168), (1, 4096, 14336), (1, 5120, 3584),
+    # (1, 6144, 16384), (1, 7168, 2048), (1, 14336, 4096), (1, 28672, 4096),
+    # (1, 32768, 6144),
     (2, 4096, 4096),
     (4, 1536, 2048), (4, 2048, 768), (4, 2048, 1408), (4, 2816, 2048),
     (4, 3072, 4096), (4, 3584, 2560), (4, 4096, 1536), (4, 4096, 4096),

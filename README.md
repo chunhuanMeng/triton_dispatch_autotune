@@ -2,7 +2,7 @@
 
 ## Problem Definition
 
-**Objective**: Select ≤15 Triton kernel configs from a large search space to achieve optimal performance relative to the oneDNN baseline across 118 LLM GEMM shapes.
+**Objective**: Select ≤15 Triton kernel configs from a large search space to achieve optimal performance relative to the oneDNN baseline across the active LLM GEMM shapes (101 after excluding M=1 decomposed cases).
 
 ### Formalization
 
@@ -65,7 +65,7 @@ worst  = min(all ratios)                   # single worst case
 | File | Content |
 |------|---------|
 | `shapes.csv` | 118 shapes + family + source_pattern |
-| `onednn_baseline.json` | oneDNN amortized time_us per shape |
+| `onednn_baseline*.json` | oneDNN time_us per shape; BF16 Inductor-timed data uses `onednn_baseline_inductor.json` |
 | `search_space.py` | candidate value definitions + validity checker |
 
 ### Output Files
@@ -84,9 +84,9 @@ worst  = min(all ratios)                   # single worst case
 ### Step 0: Measure oneDNN Baseline
 
 ```
-Input: 118 shapes
-Method: amortized N=500 event timing
-Output: onednn_baseline.json
+Input: active shapes (101 for BF16)
+Method: Inductor candidate timing, N=500 repetitions
+Output: `onednn_baseline_inductor.json` for BF16 (`onednn_baseline.json` for legacy INT8)
      {shape_key: {time_us, tops, bw_gbs}}
 ```
 
@@ -223,3 +223,150 @@ Scripts check state/ directory on startup and automatically resume from last che
 | Expected 10-15 rounds to converge | **~4-5 hours total** |
 
 After using Triton cache, except for the first seed search, subsequent runs are only benchmarks (no compilation).
+
+---
+
+## BF16 Inductor Autotune (Current Workflow)
+
+BF16 tuning uses the original `run_autotune.py` control flow, but its Triton
+candidate benchmark is routed through the real Inductor XPU templates:
+
+```text
+run_autotune.py
+  -> bench_worker.bench_one_template()
+  -> bench_inductor_worker.bench_one_template()
+  -> bf16_single_config_bench.py (fresh subprocess)
+  -> AlgorithmSelector candidate timing
+```
+
+The logical template names are:
+
+| Dispatch-table name | Inductor template |
+|---|---|
+| `triton_mm` | `mm_template` |
+| `bmg_persistent` | `bmg_persistent_mm_template` |
+| `bmg_decode` | `bmg_tiled2d_mm_template` |
+
+### Environment setup
+
+From the workspace root:
+
+```bash
+source env.sh
+cd /home/sdp/meng/int8_gemm_optimization_xe2/triton_dispatch_autotune
+export PYTHONPATH=/home/sdp/meng/pytorch:$PWD
+export XE2_ENABLE_BMG_FLOAT_TEMPLATES=1
+export XE2_MM_TUNED_CONFIGS=1
+```
+
+`env.sh` selects the `chunhuan` environment and BMG/Xe2 target. If the
+environment is already configured, only the `PYTHONPATH` and State B exports
+are required.
+
+### Recommended execution
+
+Run the complete resumable BF16 workflow:
+
+```bash
+python run_autotune.py --dtype bf16 --step all
+```
+
+Or run individual stages:
+
+```bash
+python run_autotune.py --dtype bf16 --step baseline
+python run_autotune.py --dtype bf16 --step seed
+python run_autotune.py --dtype bf16 --step iterate
+python run_autotune.py --dtype bf16 --step report
+```
+
+The stages are resumable. BF16 state is stored separately under
+`state_bf16_v7/`, so it does not reuse INT8 timings or the previous BF16 v6
+experiment.
+
+### Timing policy
+
+| Stage | Inductor warmup | Inductor repetitions |
+|---|---:|---:|
+| baseline (`torch.mm`) | 50 | 500 Inductor candidate-timer repetitions |
+| full search / seed | 50 | 50 |
+| sweep | 50 | 500 |
+| promotion | 50 | 200 |
+
+The BF16 baseline measures the non-Triton `mm` choice through the same Inductor
+AlgorithmSelector candidate-timing path used for Triton candidates. A single
+Triton anchor choice is retained to ensure that Inductor executes the normal
+choice benchmark flow; only the captured non-Triton `mm` timing is returned.
+The resulting data is written to `onednn_baseline_inductor.json`; the previous
+`onednn_baseline.json` remains the legacy XPU-Event baseline. The iteration
+counts above are controlled by `run_autotune.py` and are passed to Inductor as
+`TORCHINDUCTOR_DEFAULT_AUTOTUNE_REP`.
+
+### Search-space mode
+
+The default mode is the original pruned generic search space:
+
+```bash
+python run_autotune.py --dtype bf16 --step seed
+```
+
+To restrict candidates to configs currently registered in the corresponding
+Inductor heuristics:
+
+```bash
+XE2_AUTOTUNE_SEARCH_SPACE=exact python run_autotune.py --dtype bf16 --step seed
+```
+
+### Single-candidate validation
+
+To validate one template/config without starting the full controller:
+
+```bash
+XE2_PARITY_TEMPLATE=bmg_persistent \
+python run_inductor_fixed_config.py \
+  --shape 128,1536,2048 \
+  --config 128,128,32,4,32 \
+  --dtype bf16 \
+  --timer candidate
+```
+
+The historical `bmg_decode` name maps to Inductor's real `bmg_tiled2d`
+template. `bf16_single_config_bench.py` is the worker used by the controller;
+it is normally called indirectly through `bench_inductor_worker.py`.
+
+### GPU serialization
+
+Every Inductor candidate runs in a fresh subprocess, but subprocesses are
+serialized by the host-wide Linux `flock` file:
+
+```text
+/tmp/xe2_bf16_inductor_bench.lock
+```
+
+This prevents two independently launched autotune jobs using this backend from
+benchmarking the same XPU concurrently. To use another lock location:
+
+```bash
+export XE2_INDUCTOR_BENCH_LOCK=/tmp/xe2_bf16_xpu0.lock
+```
+
+Do not use different lock paths for jobs that target the same XPU.
+
+### Debugging and backend override
+
+To print failed worker details:
+
+```bash
+export XE2_BENCH_DEBUG_ERRORS=1
+export XE2_INDUCTOR_BENCH_VERBOSE=1
+```
+
+The BF16 Inductor backend is the default. The old external Triton backend can
+be selected temporarily with:
+
+```bash
+export XE2_BF16_BENCH_BACKEND=legacy
+```
+
+Use the legacy override only for comparison; it does not measure the real
+Inductor candidate timing.
