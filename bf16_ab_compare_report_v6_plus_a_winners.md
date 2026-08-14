@@ -53,7 +53,55 @@ State B 使用 state_bf16_v6 最终 dispatch table 中的 10 个 Triton configs�
 - BF16 GEMM FLOPs：`2 × M × N × K`。
 - 读写字节数估算：`2 × (M×K + K×N + M×N)`，其中 2 是 BF16 每元素字节数。
 - 硬件参考峰值：BF16 **117 TFLOP/s**，DRAM BW **456 GB/s**。
-- 当前 JSON 中的时间是 Inductor autotune/host-observed 时间，不是 unitrace device kernel time。因此下表的 TFLOP/s、BW 和 efficiency 是**基于 host 时间的估算值**，不能等同于真实 kernel 硬件利用率；要得到严格 device efficiency，需要对每个 shape 采集 unitrace device execution time。
+- 当前 JSON 中的 candidate 时间由 Inductor autotune 通过 Triton `do_bench` 测得：使用 GPU start/end event，并在每次测量前清理约 256 MB 的 cache。因此它不是 Python host wall time，而是 **Inductor 的 cold-cache GPU candidate timing**。下表的 TFLOP/s、BW 和 efficiency 是基于该 candidate timing 的估算值，适合用于 Triton/oneDNN 的公平 winner 比较，但不等同于 hot-cache standalone kernel 的 device time。
+
+### Candidate timing 与 standalone device timing 的区别
+
+Inductor 的 `TritonBenchmarkRequest` 最终进入 Triton `do_bench`。其测量流程不是简单地连续调用 kernel，而是：
+
+1. 先执行并同步一次 candidate；
+2. 创建 benchmark cache；
+3. 每次正式测量前清理约 256 MB 的 cache；
+4. 使用 GPU event 包住单次 candidate 调用；
+5. 根据多次重复测量结果返回统计值，当前路径使用 median。
+
+因此，报告中的 Triton 和 oneDNN candidate timing 使用的是同一套 **cold-cache GPU timing**，可以直接用于 Inductor 的 autotune winner 选择。它不是 Python 调度时间，也不是 UnitTrace 中简单连续重复 kernel 的 hot-cache timing。
+
+例如 shape `(4,1536,2048)` 的 BF16 GEMM，如果使用 oneDNN candidate timing `34.011 μs`，矩阵为：
+
+- `A`: `(4,2048)`；
+- `B`: `(2048,1536)`；
+- `C`: `(4,1536)`。
+
+按 A/B 读取和 C 写回估算：
+
+$$
+\mathrm{Bytes}=2\times(MK+KN+MN)=6{,}320{,}128\ \mathrm{bytes}
+$$
+
+因此：
+
+$$
+\mathrm{BW}=\frac{6{,}320{,}128}{34.011\times10^{-6}}
+\approx185.83\ \mathrm{GB/s}
+$$
+
+相对于 `456 GB/s` DRAM 参考峰值：
+
+$$
+\mathrm{BW\ efficiency}=\frac{185.83}{456}\times100\%
+\approx40.75\%
+$$
+
+同一时间对应的计算量为：
+
+$$
+2MNK=25{,}165{,}824\ \mathrm{FLOPs}
+$$
+
+对应约 `0.740 TFLOP/s`，即 BF16 `117 TFLOP/s` 峰值的约 `0.632%`。该 shape 很小，主要受内存访问和固定 dispatch 开销影响，因此 BW efficiency 比 TFLOP/s 更有解释力。
+
+之前 standalone eager `torch.mm`/UnitTrace 得到约 `11.8 μs`，主要是 hot-cache timing：连续调用复用相同的 A/B 数据，并没有在每个 GEMM 前清理 L2 cache。它比 Inductor cold-cache candidate timing 快约 `2.88x`，不能直接与报告中的 candidate 时间做绝对值比较。standalone UnitTrace 适合观察实际 kernel execution 和 kernel 名称；Inductor candidate timing 更适合判断 Triton 与 oneDNN 谁会被 autotune 选中。
 
 ## 3. 总结
 
@@ -77,6 +125,30 @@ State B 使用 state_bf16_v6 最终 dispatch table 中的 10 个 Triton configs�
 1. 在 Triton-only 口径下，State B 几何平均为 **1.0799x**，即相对 State A 约提升 **7.99%**。
 2. 由于 oneDNN 会参与 Inductor 选择，系统实际收益被 fallback 隐藏，system-level 几何平均为 **1.0145x**，约提升 **1.45%**。
 3. State B 的 Triton 相对 oneDNN 几何平均为 **1.0582x**；共有 **65/101** 个完整 shape 上 Triton 快于 oneDNN。
+
+### 当前最值得继续优化的 shape
+
+“提升空间”需要区分两个口径：
+
+1. **相对提升空间**：看 `oneDNN_time / Triton_time`。该值越小，说明 Triton 相对 oneDNN 越慢。
+2. **绝对收益空间**：看 `Triton_time - oneDNN_time`。该值越大，说明即使只提升一小部分，也能带来更多绝对 latency 收益。
+
+按照本报告逐 shape 数据，优先级如下：
+
+| 优先级 | Shape | State B Triton | oneDNN | Triton / oneDNN | 绝对差距 | 说明 |
+|---|---|---:|---:|---:|---:|---|
+| 相对优先 | `(512,4096,1536)` | 0.1118 ms | 0.1001 ms | 1.117x | 0.0117 ms | Triton 慢约 11.7%，适合研究 config/tile 是否不匹配 |
+| 相对优先 | `(1024,4096,14336)` | 1.3857 ms | 1.2686 ms | 1.092x | 0.1171 ms | 大矩阵且 Triton 仍慢，适合研究 persistent/通用 Triton 配置 |
+| 相对优先 | `(1024,4096,16384)` | 1.5709 ms | 1.4428 ms | 1.089x | 0.1281 ms | 与上一个 shape 具有相似的 K/N 结构，可作为成组优化目标 |
+| 绝对优先 | `(2048,7168,28672)` | 9.2608 ms | 8.6333 ms | 1.073x | 0.6275 ms | 当前最大绝对 latency 差距，最值得优先投入 profiling |
+| 绝对优先 | `(2048,6656,16384)` | 4.8867 ms | 4.6330 ms | 1.055x | 0.2537 ms | 大 prefill shape，绝对收益较高 |
+| 绝对优先 | `(1024,7168,28672)` | 4.6444 ms | 4.3373 ms | 1.071x | 0.3071 ms | 与 `(2048,7168,28672)` 可共享调优方向 |
+
+如果只能选择一个 shape，建议优先选择 **`(2048,7168,28672)`**：它的 Triton 时间为 `9.2608 ms`，oneDNN 为 `8.6333 ms`，相差 `0.6275 ms`，是表中最大的绝对 latency gap。目标可以先设为缩小差距，再争取超过 oneDNN。
+
+如果目标是寻找最明显的相对 config 问题，则选择 **`(512,4096,1536)`**；它的矩阵规模较小，当前 Triton 相对 oneDNN 的差距约为 `11.7%`，更适合快速试验 tile、`num_stages` 和 `num_warps`。
+
+注意：本节使用的是本报告表格对应的 `bf16_ab_compare_results_v6_plus_a_winners` 数据口径。若改用其他轮次或 deployed JSON，winner 和绝对 timing 可能不同，不能混用不同版本的结果。
 
 ## 4. Triton 相对 oneDNN：逐 shape
 

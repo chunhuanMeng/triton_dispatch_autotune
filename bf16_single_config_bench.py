@@ -74,6 +74,8 @@ def configure_requested_template(template, config):
         "bmg_tiled2d": bmg_tiled2d_mm_template,
     }[template]
     heuristic = get_template_heuristic(template_object.uid, "xpu", "mm")
+    # GemmConfig's five-dimensional interface intentionally leaves GROUP_M at
+    # Inductor's default value (8); it is not part of autotune search.
     candidate = GemmConfig(*config)
     # max-autotune and exhaustive paths use different attributes in the
     # heuristic implementation.  Set both so this worker has one stable
@@ -86,7 +88,26 @@ def configure_requested_template(template, config):
         heuristic.should_scale_configs = False
 
 
-def worker(M, N, K, template, config):
+def apply_grf_mode(grf_mode):
+    """Force the Intel Triton backend's GRF mode for every compiled kernel.
+
+    Inductor never sets ``grf_mode``, so XPU kernels are built with the
+    backend default (128 GRF).  oneDNN's nGEN GEMM uses 256 GRF, which lets it
+    hold twice the accumulator tile.  This hook makes that variable testable.
+    """
+    from torch._inductor.runtime.triton_heuristics import CachingAutotuner
+
+    original = CachingAutotuner._create_compile_options
+
+    def patched(self, cfg, compile_meta):
+        options = original(self, cfg, compile_meta)
+        options["grf_mode"] = grf_mode
+        return options
+
+    CachingAutotuner._create_compile_options = patched
+
+
+def worker(M, N, K, template, config, grf_mode=None):
     import logging
 
     import torch
@@ -100,6 +121,9 @@ def worker(M, N, K, template, config):
     inductor_config.max_autotune_gemm = True
     inductor_config.fx_graph_cache = False
     inductor_config.autotune_local_cache = False
+
+    if grf_mode:
+        apply_grf_mode(grf_mode)
 
     configure_requested_template(template, config)
 
@@ -190,6 +214,7 @@ def worker(M, N, K, template, config):
         "shape": [M, N, K],
         "template": template,
         "config": list(config),
+        "grf_mode": grf_mode or "default",
         "target_name": target_name,
         "target_timing_ms": timings[target_name],
         "timings_ms": timings,
@@ -210,11 +235,16 @@ def main():
         choices=("triton_mm", "bmg_persistent", "bmg_tiled2d"),
     )
     parser.add_argument("--config", required=True, type=parse_config)
+    parser.add_argument(
+        "--grf-mode",
+        choices=("default", "128", "256", "auto"),
+        help="override the Intel Triton backend GRF mode for this run",
+    )
     args = parser.parse_args()
 
     os.environ.setdefault("XE2_ENABLE_BMG_FLOAT_TEMPLATES", "1")
     os.environ.setdefault("XE2_MM_TUNED_CONFIGS", "1")
-    worker(args.M, args.N, args.K, args.template, args.config)
+    worker(args.M, args.N, args.K, args.template, args.config, args.grf_mode)
 
 
 if __name__ == "__main__":

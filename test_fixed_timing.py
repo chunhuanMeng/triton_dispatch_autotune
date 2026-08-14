@@ -92,8 +92,8 @@ def test_timing():
     # Calculate TOPS
     tops_triton = 2 * M * N * K / (triton_time * 1e-6) / 1e12
     tops_onednn = 2 * M * N * K / (onednn_time * 1e-6) / 1e12
-    print(f'Triton TOPS: {tops_triton:.2f} ({tops_triton/234*100:.1f}% of peak)')
-    print(f'oneDNN TOPS: {tops_onednn:.2f} ({tops_onednn/234*100:.1f}% of peak)')
+    print(f'Triton TOPS: {tops_triton:.2f} ({tops_triton/196.6*100:.1f}% of peak)')
+    print(f'oneDNN TOPS: {tops_onednn:.2f} ({tops_onednn/196.6*100:.1f}% of peak)')
 
 
 if __name__ == "__main__":

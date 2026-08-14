@@ -19,7 +19,7 @@ from pathlib import Path
 
 from search_space import (
     ALL_SHAPES, TEMPLATES, GemmConfig, DispatchConfig,
-    generate_valid_configs, generate_good_configs, generate_autotune_configs,
+    generate_valid_configs, generate_autotune_configs,
     get_shape_family, get_source_pattern, template_config_keys,
     is_valid_for_template,
 )
@@ -171,7 +171,12 @@ def step_seed():
 
 
 def search_shape(M, N, K):
-    """Full six-dimensional search on one shape. Uses a dtype-specific cache."""
+    """Full five-dimensional search on one shape. Uses a dtype-specific cache."""
+    if SEARCH_SPACE_MODE == "persistent_group":
+        raise ValueError(
+            "XE2_AUTOTUNE_SEARCH_SPACE=persistent_group is no longer supported; "
+            "GROUP_M is fixed at Inductor's default and is not a search dimension"
+        )
     cache_file = SEARCH_CACHE_DIR / f"search_{M}_{N}_{K}.json"
 
     # Load cache
@@ -193,9 +198,10 @@ def search_shape(M, N, K):
             if config.key in template_config_keys(template, AUTOTUNE_DTYPE)
         ]
     else:
-        # Original autotune mode: use the declared generic search space rather
-        # than silently replacing it with a small fixed candidate list.
-        valid_configs = generate_good_configs(M, N, K)
+        # Generic mode searches every hardware-valid Cartesian configuration.
+        # Do not apply the heuristic is_good_config() pruning here: it can
+        # discard viable BF16 candidates such as BK=32 for large-K shapes.
+        valid_configs = generate_valid_configs(M, N, K)
         choices = [
             (template, config)
             for config in valid_configs
@@ -583,6 +589,15 @@ def main():
     parser.add_argument("--step", choices=["baseline", "seed", "iterate", "report", "all"],
                         default="all")
     parser.add_argument(
+        "--search-shape",
+        help="search one shape only, formatted as M,N,K; bypasses the multi-shape loop",
+    )
+    parser.add_argument(
+        "--search-only",
+        action="store_true",
+        help="with --search-shape, run search_shape() and do not run baseline/iterate/report",
+    )
+    parser.add_argument(
         "--dtype", choices=("int8", "bf16", "fp16"), default="int8",
         help="autotune dtype; state is isolated per dtype",
     )
@@ -590,6 +605,23 @@ def main():
 
     os.chdir(Path(__file__).parent)
     configure_dtype(args.dtype)
+
+    if args.search_shape:
+        try:
+            M, N, K = (int(value) for value in args.search_shape.split(","))
+        except ValueError as exc:
+            parser.error("--search-shape must be formatted as M,N,K")
+        results = search_shape(M, N, K)
+        print(f"\nSingle-shape search complete: ({M},{N},{K})")
+        for rank, (config, time_us) in enumerate(results[:20], 1):
+            print(
+                f"{rank:2d}. {time_us:.3f} us "
+                f"{config.template} config=({config.BLOCK_M},{config.BLOCK_N},"
+                f"{config.BLOCK_K},{config.num_stages},{config.num_warps}"
+                + ")"
+            )
+        if args.search_only:
+            return
 
     if args.step == "baseline" or args.step == "all":
         step_baseline()

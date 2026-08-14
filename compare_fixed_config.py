@@ -157,9 +157,9 @@ def benchmark(case: Case, warmup: int, iterations: int, trials: int) -> dict:
         "trial_times_us": ";".join(f"{x:.4f}" for x in times_us),
         "time_us": time_us,
         "tops": tops,
-        "tops_eff_pct": tops / 234.0 * 100.0,
+        "tops_eff_pct": tops / 196.6 * 100.0,
         "bw_gbps": bw,
-        "bw_eff_pct": bw / 456.0 * 100.0,
+        "bw_eff_pct": bw / 407.0 * 100.0,
     }
 
 

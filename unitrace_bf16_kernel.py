@@ -1,8 +1,9 @@
 """
 Simple standalone kernel-only script for unitrace device-timing analysis.
-Usage: python unitrace_bf16_kernel.py <mode>
-  mode: 'triton' (kernel_bmg_decode best config) or 'onednn' (torch.mm)
-Shape fixed at (128, 2048, 768), BF16.
+Usage: python unitrace_bf16_kernel.py <mode> [M N K BM BN BK NS NW]
+    mode: 'triton' or 'onednn'
+Defaults are the original shape/config; all dimensions and Triton config fields
+can be overridden for an isolated device-timing run.
 """
 import sys
 import os
@@ -15,11 +16,13 @@ from bench_worker import kernel_bmg_decode, _make_inputs
 from search_space import GemmConfig
 
 MODE = sys.argv[1]
-M, N, K = 128, 2048, 768
+values = [int(value) for value in sys.argv[2:]]
+defaults = [128, 2048, 768, 32, 256, 32, 2, 8]
+M, N, K, bm, bn, bk, ns, nw = (values + defaults[len(values):])
 NUM_ITERS = 20
 
 A, B, C, _ = _make_inputs(M, N, K, "bf16")
-cfg = GemmConfig(32, 256, 32, 2, 8)
+cfg = GemmConfig(bm, bn, bk, ns, nw)
 
 if MODE == "triton":
     bm, bn, bk = cfg.BLOCK_M, cfg.BLOCK_N, cfg.BLOCK_K

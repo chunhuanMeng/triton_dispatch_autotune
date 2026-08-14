@@ -8,8 +8,26 @@ import math
 from collections import Counter
 from pathlib import Path
 
-PEAK_BF16_TFLOPS = 117.0
-PEAK_BW_GBPS = 456.0
+# Hardware peaks for this part -- Intel Arc Pro B60 (BMG-G21, 20 Xe cores).
+#
+# BF16 XMX peak = cores * FLOP_per_clk_per_core * clock
+#               = 20 * 2048 * 2.4e9 = 98.3 TF/s
+#
+# 2048 FLOP/clk/core is not a datasheet guess; it was derived from unitrace
+# ComputeBasic counters on an 8192^3 mm:
+#   M*N*K / XVE_INST_EXECUTED_ALU2_ALL  = 256 MAC  = 512 FLOP per ALU2 slot
+#   XVE_INST_EXECUTED_ALU2_ALL / GpuCoreClocks = 78.80, ceiling 20*4 = 80 slots
+#   => 4 slots/clk/core * 512 FLOP = 2048 FLOP/clk/core, and the run measured
+#      96.83 TF/s = 98.5% of 98.26 TF/s, matching
+#      XVE_INST_EXECUTED_ALU2_ALL_UTILIZATION = 98.5% exactly.
+#
+# The old 117 TF/s figure belongs to the Arc B580 at its 2.85 GHz boost clock
+# and understated every efficiency number on this card by 117/98.3 = 1.19x.
+#
+# DRAM: 456 GB/s is the theoretical figure; measured streaming reads top out
+# near 407-448 GB/s, so treat anything above ~90% as saturated.
+PEAK_BF16_TFLOPS = 98.3
+PEAK_BW_GBPS = 407.0  # achievable, not theoretical 456
 BF16_BYTES = 2
 
 
@@ -127,7 +145,9 @@ def main():
     add("")
     add(f"- BF16 GEMM FLOPs：`2 × M × N × K`。")
     add(f"- 读写字节数估算：`2 × (M×K + K×N + M×N)`，其中 2 是 BF16 每元素字节数。")
-    add(f"- 硬件参考峰值：BF16 **{PEAK_BF16_TFLOPS:.0f} TFLOP/s**，DRAM BW **{PEAK_BW_GBPS:.0f} GB/s**。")
+    add(f"- 硬件参考峰值：BF16 **{PEAK_BF16_TFLOPS:.1f} TFLOP/s**"
+        f"（20 Xe cores × 2048 FLOP/clk × 2.4 GHz，经 unitrace ALU2 计数器校准），"
+        f"DRAM BW **{PEAK_BW_GBPS:.0f} GB/s**（实测可达约 407–448 GB/s）。")
     add("- 当前 JSON 中的时间是 Inductor autotune/host-observed 时间，不是 unitrace device kernel time。因此下表的 TFLOP/s、BW 和 efficiency 是**基于 host 时间的估算值**，不能等同于真实 kernel 硬件利用率；要得到严格 device efficiency，需要对每个 shape 采集 unitrace device execution time。")
     add("")
     add("## 3. 总结")

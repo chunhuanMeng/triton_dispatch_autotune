@@ -1,17 +1,69 @@
 """
 Search space definition and config validation for Triton GEMM dispatch autotune.
-Config is 5-dimensional: (BLOCK_M, BLOCK_N, BLOCK_K, num_stages, num_warps).
+The search is 5-dimensional: (BLOCK_M, BLOCK_N, BLOCK_K, num_stages,
+num_warps).  GROUP_M is kept at Inductor's runtime default and is not tuned.
 Templates are tested independently — config does NOT include template.
 """
 import itertools
+import os
 from dataclasses import dataclass
 
 # ═══ Search Space Candidates ═══
-BLOCK_M_CANDIDATES = [4, 8, 16, 32, 64, 128, 256]
-BLOCK_N_CANDIDATES = [32, 64, 128, 256, 512]
-BLOCK_K_CANDIDATES = [32, 64, 128, 256]
-NUM_STAGES_CANDIDATES = [1, 2, 3, 4]
+# Full Cartesian space.  Kept as the reference space and used by
+# backtest_search_space.py; set XE2_AUTOTUNE_FULL_SPACE=1 to search it directly.
+BLOCK_M_CANDIDATES = [4, 8, 16, 32, 64, 128, 256, 512]
+BLOCK_N_CANDIDATES = [32, 64, 128, 256, 512, 1024]
+BLOCK_K_CANDIDATES = [16, 32, 64, 128, 256]
+NUM_STAGES_CANDIDATES = [1, 2, 3, 4, 5]
 NUM_WARPS_CANDIDATES = [4, 8, 16, 32]
+
+# Reduced per-M-regime spaces ("proposal B").  Backtested against 34666 recorded
+# measurements over 13 shapes in state_bf16_v*/search_cache: zero regression on
+# the best config of every shape, 95% of each shape's top-10 candidates kept.
+#
+# num_stages and num_warps are deliberately NOT trimmed.  They only have 4-5
+# values each, so trimming them saves little, yet the optimum frequently sits on
+# an "edge" value -- e.g. (2048,7168,28672) is won by num_stages=4 and
+# (2048,6144,16384) by num_warps=32.  Capping num_stages at 3 cost 3.5% on
+# (2048,7168,28672) and dropped its top-10 retention to 3/10.
+# Only the tile dimensions are trimmed.
+M_REGIME_SPLIT = 512
+
+BIG_M_SPACE = {
+    "BLOCK_M": [128, 256, 512],
+    "BLOCK_N": [64, 128, 256, 512],
+    "BLOCK_K": [16, 32, 64, 128],
+    "num_stages": NUM_STAGES_CANDIDATES,
+    "num_warps": NUM_WARPS_CANDIDATES,
+}
+# BLOCK_M deliberately keeps 256/512 here.  is_valid_config() already discards
+# a tile that is far larger than M (bm > max(M*8, 64)), so tiny shapes are not
+# affected, but M=256 must be allowed to use BLOCK_M=256: that makes grid_m=1,
+# so the B panel is streamed from DRAM exactly once.  oneDNN picks a 256x256
+# tile for (256,4096,4096) (16 workgroups), and capping BLOCK_M at 128 hid the
+# matching Triton config from the search.
+SMALL_M_SPACE = {
+    "BLOCK_M": [4, 8, 16, 32, 64, 128, 256, 512],
+    "BLOCK_N": [32, 64, 128, 256, 512],
+    "BLOCK_K": [16, 32, 64, 128, 256],
+    "num_stages": NUM_STAGES_CANDIDATES,
+    "num_warps": NUM_WARPS_CANDIDATES,
+}
+FULL_SPACE = {
+    "BLOCK_M": BLOCK_M_CANDIDATES,
+    "BLOCK_N": BLOCK_N_CANDIDATES,
+    "BLOCK_K": BLOCK_K_CANDIDATES,
+    "num_stages": NUM_STAGES_CANDIDATES,
+    "num_warps": NUM_WARPS_CANDIDATES,
+}
+
+
+def search_space_for(M):
+    """Return the candidate space to search for a given M."""
+    if os.environ.get("XE2_AUTOTUNE_FULL_SPACE") == "1":
+        return FULL_SPACE
+    return BIG_M_SPACE if M >= M_REGIME_SPLIT else SMALL_M_SPACE
+
 
 # Templates: each template will be tested independently with the same config set
 TEMPLATES = ["triton_mm", "bmg_persistent", "bmg_decode"]
@@ -88,17 +140,21 @@ class GemmConfig:
         return (self.BLOCK_M, self.BLOCK_N, self.BLOCK_K, self.num_stages, self.num_warps)
 
     def to_dict(self):
-        return {
+        result = {
             "BLOCK_M": self.BLOCK_M,
             "BLOCK_N": self.BLOCK_N,
             "BLOCK_K": self.BLOCK_K,
             "num_stages": self.num_stages,
             "num_warps": self.num_warps,
         }
+        return result
 
     @classmethod
     def from_dict(cls, d):
-        return cls(d["BLOCK_M"], d["BLOCK_N"], d["BLOCK_K"], d["num_stages"], d["num_warps"])
+        return cls(
+            d["BLOCK_M"], d["BLOCK_N"], d["BLOCK_K"],
+            d["num_stages"], d["num_warps"]
+        )
 
     def __str__(self):
         return f"BM={self.BLOCK_M} BN={self.BLOCK_N} BK={self.BLOCK_K} NS={self.num_stages} NW={self.num_warps}"
@@ -106,7 +162,7 @@ class GemmConfig:
 
 @dataclass(frozen=True)
 class DispatchConfig:
-    """Six-dimensional dispatch key: template + five GEMM parameters."""
+    """Dispatch key: template + five GEMM parameters."""
 
     template: str
     gemm: GemmConfig
@@ -221,11 +277,15 @@ def is_valid_for_template(M, N, K, config, template):
 
 
 def generate_valid_configs(M, N, K):
-    """Generate all valid 5-dim configs for a given shape."""
+    """Generate all valid 5-dim configs for a given shape.
+
+    Uses the reduced per-M-regime space by default; see search_space_for().
+    """
+    space = search_space_for(M)
     configs = []
     for bm, bn, bk, ns, nw in itertools.product(
-        BLOCK_M_CANDIDATES, BLOCK_N_CANDIDATES, BLOCK_K_CANDIDATES,
-        NUM_STAGES_CANDIDATES, NUM_WARPS_CANDIDATES
+        space["BLOCK_M"], space["BLOCK_N"], space["BLOCK_K"],
+        space["num_stages"], space["num_warps"]
     ):
         if is_valid_config(M, N, K, bm, bn, bk, ns, nw):
             configs.append(GemmConfig(bm, bn, bk, ns, nw))
