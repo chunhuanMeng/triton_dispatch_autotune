@@ -745,7 +745,7 @@ bound 判定       回答「先修哪一项、能省多少」-> 需要干净时�
 
 #### 四个实例：不做任何 bound 判定，问题已经一目了然
 
-先说清楚这四个是什么 —— 全是 bf16 GEMM，$C(M\times N) = A(M\times K)\cdot B(K\times N)$，
+先说清楚这四个是什么 —— 全是 bf16 GEMM， $C(M\times N) = A(M\times K)\cdot B(K\times N)$ ，
 config 记法为 $(BM,\ BN,\ BK,\ \mathrm{num-stages},\ \mathrm{num-warps})$：
 
 | 代号 | shape $(M,N,K)$ | 什么场景 | Triton config | 备注 |
