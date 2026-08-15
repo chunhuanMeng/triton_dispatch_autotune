@@ -270,8 +270,8 @@ MAC = 8 (repeat 行) × 16 (SIMD16 通道) × 8×2 (depth × bf16 打包) = 2048
 > | TOPS | $2MNK/t$，$t$ 取自 `-q` | ⚠️ `-q` 口径，真值更高 |
 >
 > 原表还有 `ceiling` 和 `有效%` 两列，**已删除**——都是恒等式：
-> `ceiling` $=\frac{\texttt{events}/\texttt{clk}}{\texttt{UTIL}}$ 必为 80（驱动定义）；
-> 无浪费时 $\text{有效\%}=\frac{2MNK/t}{20\cdot4096\cdot f}=\frac{MNK}{40960\,tf}=\texttt{UTIL}$，
+> `ceiling` $=\frac{\mathrm{events}/\mathrm{clk}}{\mathrm{UTIL}}$ 必为 80（驱动定义）；
+> 无浪费时 $\mathrm{有效\%}=\frac{2MNK/t}{20\cdot4096\cdot f}=\frac{MNK}{40960\,tf}=\mathrm{UTIL}$，
 > 原表里 93.78/93.81 那种"一致"只是舍入，不是交叉验证。
 >
 > 三个结论：
@@ -307,9 +307,9 @@ M·N·K / ALU2_events = 8192³ / 2,147,483,648 = 256.0
 
 > **⚠ 先说结论的性质。** 本节旧版写「80 是从两个计数器反推出来的」，**那是错的**。
 >
-> 逐行验证发现 $\dfrac{\mathrm{ALU2\_events}/\texttt{clk}}{\texttt{ALU2\_UTILIZATION}}$ 在**每一行**
+> 逐行验证发现 $\dfrac{\mathrm{ALU2\_events}/\mathrm{clk}}{\mathrm{ALU2\_UTILIZATION}}$ 在**每一行**
 > 都精确等于 80.000000（12 行，std = 0.000003）——因为驱动就是按
-> $\texttt{ALU2\_UTILIZATION} = \dfrac{\mathrm{ALU2\_events}}{\texttt{clk}\times 80}$ 算的。
+> $\mathrm{ALU2\_UTILIZATION} = \dfrac{\mathrm{ALU2\_events}}{\mathrm{clk}\times 80}$ 算的。
 > **这是恒等式，不是测量。** 它只说明 Intel 的驱动认为上限是 80。
 >
 > **80 的真实性质：厂商常数**（写死在驱动的 metric 定义里），不是我们量出来的。
@@ -512,8 +512,8 @@ workgroup 有真活，其余照样发 dpas，结果写回时丢弃：$\text{浪�
 
 | 量 | 怎么得到 | 覆盖什么浪费 | 对谁成立 |
 |---|---|---|---|
-| **预测浪费** $\dfrac{\texttt{ALU2\_pred}}{\texttt{ALU2\_min}}$ | 纯算术 | 只有 **tile 边缘 padding** | 所有实现 |
-| **实测浪费** $\dfrac{\mathrm{ALU2\_events}}{\texttt{ALU2\_min}}$ | 计数器 | tile padding **+ 被真正执行的废 tile** | 所有实现 |
+| **预测浪费** $\dfrac{\mathrm{ALU2\_pred}}{\mathrm{ALU2\_min}}$ | 纯算术 | 只有 **tile 边缘 padding** | 所有实现 |
+| **实测浪费** $\dfrac{\mathrm{ALU2\_events}}{\mathrm{ALU2\_min}}$ | 计数器 | tile padding **+ 被真正执行的废 tile** | 所有实现 |
 | **调度代价** $\dfrac{20\lceil T/20\rceil}{T}$ | 纯算术（$T$ 由 tile 定） | **末波空转** | 所有实现 |
 
 > **最容易搞错的一点：实测浪费只对 persistent kernel 能看见调度损失。**
@@ -711,12 +711,12 @@ Triton 把它当**临时值**——每轮重新算全部字段，包括那些从
 | # | 体检项 | 怎么算 | 超标说明 | 要 profiler | 直接对应的修法 |
 |---|---|---|---|---|---|
 | 1 | **DPAS 工作量比** | $\dfrac{\mathrm{ALU2\_events}}{MNK/256}$ | tile padding / 算废 tile | 要 | 减小 $BM$/$BN$ |
-| 1' | 同上的**纯算术预测** | $\dfrac{\texttt{ALU2\_pred}}{\texttt{ALU2\_min}}$ | 只覆盖 tile 边缘 padding | **不要** | 搜索阶段前置剪枝 |
+| 1' | 同上的**纯算术预测** | $\dfrac{\mathrm{ALU2\_pred}}{\mathrm{ALU2\_min}}$ | 只覆盖 tile 边缘 padding | **不要** | 搜索阶段前置剪枝 |
 | 2 | **调度代价** | $\dfrac{20\lceil T/20\rceil}{T}$，$T$ = tile 总数 | 末波空转 | **不要** | **把 $T$ 做大**（tile 做细）；整除 20 是次要的 |
 | 3 | **并行度** | $\dfrac{T}{20}$ | $<1$ 就有 core 全程闲置 | **不要** | 减小 tile 把 grid 撑到 $\ge$ 20 |
-| 4 | **DRAM 流量比** | $\dfrac{\texttt{BYTE\_READ}}{2(MK+KN+MN)}$ | L2 blocking 差，B 被重复读 | 要 | 增大 $BM$ / 调 `GROUP_M` |
+| 4 | **DRAM 流量比** | $\dfrac{\mathrm{BYTE\_READ}}{2(MK+KN+MN)}$ | L2 blocking 差，B 被重复读 | 要 | 增大 $BM$ / 调 `GROUP_M` |
 | 5 | **指令比** | $\dfrac{\texttt{instr/dpas}}{1+17/D+1/(UD)}$（2.1 第三栏） | 地址/descriptor 冗余 | 要 | 外提 descriptor（backend） |
-| 6 | **访存碎片度** | $\dfrac{\texttt{L1\_ACCESS}}{\texttt{SEND}}$ | 一条消息展开成太多次 L1 访问（oneDNN $\approx$ 13） | 要 | 增大 $BK$ / 去冗余 prefetch |
+| 6 | **访存碎片度** | $\dfrac{\mathrm{L1\_ACCESS}}{\mathrm{SEND}}$ | 一条消息展开成太多次 L1 访问（oneDNN $\approx$ 13） | 要 | 增大 $BK$ / 去冗余 prefetch |
 | 7 | **SLM 流量** | `SLM_BYTE_READ` | $\ne 0$ 就说明没走 block2D 直出 | 要 | 换回 `make_block_ptr` |
 | 8 | **寄存器溢出** | `n_spills` | $\ne 0$ 直接废 | **不要**（编译期） | 换 config |
 
@@ -1035,8 +1035,8 @@ $$
 | 资源 | 需要的 clk | 上限可信度 |
 |---|---|---|
 | ALU2（XMX） | $\mathrm{ALU2\_events} / 80$ | **高**，反推得出，任何口径可用 |
-| ALU1（标量） | $\texttt{ALU1\_events} / 160$ | **高**，同上 |
-| DRAM | $\texttt{GPU\_MEMORY\_BYTE\_READ} / 407\text{e}9 \times f$ | **高**，stream 实测（未 profiling） |
+| ALU1（标量） | $\mathrm{ALU1\_events} / 160$ | **高**，同上 |
+| DRAM | $\mathrm{GPU\_MEMORY\_BYTE\_READ} / 407\mathrm{e}9 \times f$ | **高**，stream 实测（未 profiling） |
 | LSU（L1） | **没有可信上限** | 只报**速率**（次/clk），横向对比，不要算百分比 |
 
 $(256,4096,4096)$ 实例（干净时间 117.3 / 116.1 μs，事件取自 `-q` 采集）：
@@ -1074,7 +1074,7 @@ Triton 额外背了 **3.4 倍的 L1 访问**和 **45 倍的 ALU1**，却只慢 1
 | 指标 | 饱和阈值 | 含义 |
 |---|---|---|
 | `XVE_INST_EXECUTED_ALU2_ALL_UTILIZATION[%]` | > 85% | 算力打满（XMX）。**必须用干净口径重建值**，`-q` 直读会系统性偏低 |
-| `GPU_MEMORY_BYTE_READ_RATE[GBpS]` | > 350 | 带宽打满（DRAM）。**注意这也是速率**：`-q` 直读会偏低，而参照值 407 GB/s 是干净口径实测的，两者不可直接比 —— 用 $\texttt{GPU\_MEMORY\_BYTE\_READ} / t_{\text{干净}}$ 自己算 |
+| `GPU_MEMORY_BYTE_READ_RATE[GBpS]` | > 350 | 带宽打满（DRAM）。**注意这也是速率**：`-q` 直读会偏低，而参照值 407 GB/s 是干净口径实测的，两者不可直接比 —— 用 $\mathrm{GPU\_MEMORY\_BYTE\_READ} / t_{\text{干净}}$ 自己算 |
 | `XVE_SHARED_FUNCTION_ACCESS_HOLD[%]` | > 25% | 卡在 LSU 等共享单元 —— **LSU-bound 的主判据** |
 | `LOAD_STORE_CACHE_ACCESS / GpuCoreClocks` | **无可信上限** | 干净口径实测已达 89.70；只报速率、只做横比，**不要算百分比** |
 | `XVE_INST_EXECUTED_ALU1_ALL_UTILIZATION[%]` | > 85% | 标量管线打满（分母 160，厂商常数）。**同样要用重建值** |
@@ -1366,7 +1366,7 @@ unitrace -d python your_script.py
 > 事件计数在两种口径下相同（同一个程序、同样的指令），所以可以直接重建：
 >
 > $$
-> \texttt{UTILIZATION}_{\text{干净}} = \frac{\texttt{events}_{\texttt{-q}}}{t_{\texttt{-d}} \times f \times \text{ceiling}}
+> \mathrm{UTILIZATION}_{\text{干净}} = \frac{\mathrm{events}_{\mathrm{-q}}}{t_{\mathrm{-d}} \times f \times \text{ceiling}}
 > $$
 >
 > | | events 来源 | clk 来源 | 描述哪次执行 |
@@ -1485,7 +1485,7 @@ config 搜索，追的其实是一个不存在的 19% 差距。
 >
 > $$
 > \frac{\text{achieved}}{\text{peak}} = \frac{2MNK/t}{20\cdot2048\cdot f}
-> = \frac{MNK}{20480\,t f} = \frac{\mathrm{ALU2\_events}/\texttt{clk}}{80} = \texttt{ALU2\_UTILIZATION}
+> = \frac{MNK}{20480\,t f} = \frac{\mathrm{ALU2\_events}/\mathrm{clk}}{80} = \mathrm{ALU2\_UTILIZATION}
 > $$
 >
 > 三者恒等，"一致"是必然的。
@@ -2020,7 +2020,7 @@ LHS 的路径 —— 它改用 SLM 中转，每次 K 迭代 256 条 `load.slm`�
 > | $-$ `goto` / `join`（结构化控制流标记） | 16 | **19.98** |
 > | 计数器实测 | | **19.84** |
 >
-> 同一规律在 `make_block_ptr` 上复现：$(82-2\ \texttt{sync.nop}-2\ \texttt{sync.allwr})/32 = 2.44$，
+> 同一规律在 `make_block_ptr` 上复现：$(82-2\ \mathrm{sync.nop}-2\ \mathrm{sync.allwr})/32 = 2.44$，
 > 计数器 2.45。
 >
 > **用法分工**：计数器值**用于判定**（真实发射量，无假设，可直接和上限/下限比）；
@@ -2157,7 +2157,7 @@ $$
 用 $(256,4096,4096)$ Triton 独立验证：$\dfrac{22.1\text{M}}{320{,}311} = 69.0$ slots/clk，
 $\dfrac{69.0}{0.432} = 159.7$。**两个毫不相关的 kernel 都反推出 160。**
 
-**结论 1**：$\texttt{ALU1\_UTILIZATION} = \texttt{ALU1 slots/clk} / 160$，上限已确定。
+**结论 1**：$\mathrm{ALU1\_UTILIZATION} = \mathrm{ALU1\ slots/clk} / 160$，上限已确定。
 
 **结论 2**：160 属于 **ALU0/ALU1 执行槽**，**不属于 `ISSUED`**。两者差约 2 倍
 （61.98 vs 116.28），因为多数指令是 SIMD32，**占 2 个执行槽但只发射 1 次**。
