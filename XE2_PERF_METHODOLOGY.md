@@ -182,7 +182,9 @@ Triton 的 L1 访问数是 oneDNN 的 3.4 倍，但 DRAM 流量几乎相同 —�
 
 即：
 
-$$\texttt{ISSUED} \approx \frac{\texttt{ALU2}}{8} + \texttt{ALU0} + \texttt{ALU1} + \texttt{SEND} + \text{控制流}$$
+$$
+  ISSUED \approx \frac{\texttt{ALU2}}{8} + \texttt{ALU0} + \texttt{ALU1} + \texttt{SEND} + \text{控制流}
+$$
 
 残余的 1–6% 是 `jmpi`/`cmp`/`sync` 这类控制流指令 —— 被发射了，但不落在这四条管线上。
 
@@ -434,13 +436,17 @@ ceiling = 78.8038 / 0.9850 = 80.0000 slots/clk
 
 #### 第一栏：DPAS 预算
 
-$$\texttt{ALU2\_min} = \frac{M\cdot N\cdot K}{256}
+$$
+  ALU2_{min} = \frac{M\cdot N\cdot K}{256}
 \qquad
-\texttt{ALU2\_pred} = \frac{\lceil \tfrac{M}{BM}\rceil BM \cdot \lceil \tfrac{N}{BN}\rceil BN \cdot \lceil \tfrac{K}{BK}\rceil BK}{256}$$
+ALU2_{pred} = \frac{\lceil \frac{M}{BM}\rceil BM \cdot \lceil \frac{N}{BN}\rceil BN \cdot \lceil \frac{K}{BK}\rceil BK}{256}
+$$
 
-$$\text{预测浪费} = \frac{\texttt{ALU2\_pred}}{\texttt{ALU2\_min}}
+$$
+  预测浪费 = \frac{ALU2_{pred}}{ALU2_{min}}
 \qquad
-\text{实测浪费} = \frac{\texttt{ALU2\_events}}{\texttt{ALU2\_min}}$$
+  实测浪费 = \frac{ALU2_{events}}{ALU2_{min}}
+$$
 
 **这两个不是同一回事，别混用。**
 
@@ -471,7 +477,9 @@ workgroup 有真活，其余照样发 dpas，结果写回时丢弃：$\text{浪�
 > **杠杆是 $T$ 的大小，不是「能不能整除 20」。**
 > 把代价改写一下就清楚了：
 >
-> $$\text{调度代价} = 1 + \frac{20\lceil T/20\rceil - T}{T},\qquad \text{分子} \le 19$$
+> $$
+> \text{调度代价} = 1 + \frac{20\lceil T/20\rceil - T}{T},\qquad \text{分子} \le 19
+> $$
 >
 > **末波最多浪费 19 个 tile-slot，这个绝对量与 $T$ 无关**，所以相对代价 $\le 1 + 19/T$，
 > 完全由 $T$ 的大小决定。$2048^3$ 上的两个极端可以直接对照：
@@ -531,7 +539,9 @@ workgroup 有真活，其余照样发 dpas，结果写回时丢弃：$\text{浪�
 
 #### 第二栏：每线程每 K 迭代的 dpas 条数
 
-$$D = \frac{BM \cdot BN \cdot BK}{nw \cdot 2048}$$
+$$
+D = \frac{BM \cdot BN \cdot BK}{nw \cdot 2048}
+$$
 
 推导：一条 `dpas.8x8` 覆盖 $8$ 行 $\times$ $16$ 列 $\times$ $16$ 个 K 步 $= 2048$ 个输出-K 组合，
 一个 workgroup 的 tile 有 $BM\cdot BN\cdot BK$ 个，分给 $nw$ 个线程。
@@ -577,7 +587,9 @@ $$D = \frac{BM \cdot BN \cdot BK}{nw \cdot 2048}$$
 | 循环控制 `jmpi` | 1 | ×1（整个循环体只付一次） |
 | **小计 $C_{\text{fix}}$** | **1** | **摊薄** |
 
-$$\left(\frac{\texttt{instr}}{\texttt{dpas}}\right)_{\min} = 1 + \underbrace{\frac{C_{\text{var}}}{D}}_{\text{每个 K 步都要付}} + \underbrace{\frac{C_{\text{fix}}}{U \cdot D}}_{\text{每个循环体付一次}}, \qquad C_{\text{var}}=17,\ C_{\text{fix}}=1$$
+$$
+\left(\frac{\texttt{instr}}{\texttt{dpas}}\right)_{\min} = 1 + \underbrace{\frac{C_{\text{var}}}{D}}_{\text{每个 K 步都要付}} + \underbrace{\frac{C_{\text{fix}}}{U \cdot D}}_{\text{每个循环体付一次}}, \qquad C_{\text{var}}=17,\ C_{\text{fix}}=1
+$$
 
 $C=18$ 取自上表的 oneDNN 实测（$256\times256$ tile）。$D$ 越大（tile 越大），
 这 18 条固定开销被摊得越薄 —— 这就是大 tile 的价值。
@@ -602,7 +614,9 @@ $C$ 会随 tile 增大略有上升（加载消息变多），但同步和控制�
 
 从计数器算实际值：
 
-$$\frac{\texttt{instr}}{\texttt{dpas}} = \frac{\texttt{XVE\_INST\_ISSUED\_ALL}}{\texttt{XVE\_INST\_EXECUTED\_ALU2\_ALL} / 8}$$
+$$
+\frac{\texttt{instr}}{\texttt{dpas}} = \frac{\texttt{XVE\_INST\_ISSUED\_ALL}}{\texttt{XVE\_INST\_EXECUTED\_ALU2\_ALL} / 8}
+$$
 
 **这个比值也可以直接从汇编算**（循环体总指令数 ÷ 循环体 dpas 数），两条路径互相印证：
 
@@ -666,7 +680,9 @@ Triton 的 76 条里，有 **15 条是把写死的立即数写进 descriptor 寄
 
 代价：
 
-$$15\ \text{条} \times \underbrace{256}_{K/BK} \times \underbrace{1024}_{\text{线程}} = 3.93\times10^6\ \text{条纯浪费指令}$$
+$$
+15\ \text{条} \times \underbrace{256}_{K/BK} \times \underbrace{1024}_{\text{线程}} = 3.93\times10^6\ \text{条纯浪费指令}
+$$
 
 **准确的表述**：oneDNN 把 descriptor 当**持久对象**——建一次，循环内只推坐标；
 Triton 把它当**临时值**——每轮重新算全部字段，包括那些从头到尾不变的常量。
@@ -895,7 +911,9 @@ LSU 访问次数和指令条数完全由代码决定，没有理论下界。**�
 
 机器平衡点：
 
-$$\frac{98.3\times10^{12}}{407\times10^{9}} = 242\ \text{FLOP/byte}$$
+$$
+\frac{98.3\times10^{12}}{407\times10^{9}} = 242\ \text{FLOP/byte}
+$$
 
 算术强度 $\text{AI} = \dfrac{2MNK}{2(MK+KN+MN)}$，$\text{AI} < 242$ 为内存受限。
 
@@ -1347,7 +1365,9 @@ unitrace -d python your_script.py
 > **解决办法：公式不变，只换 `clk` 的来源。**
 > 事件计数在两种口径下相同（同一个程序、同样的指令），所以可以直接重建：
 >
-> $$\texttt{UTILIZATION}_{\text{干净}} = \frac{\texttt{events}_{\texttt{-q}}}{t_{\texttt{-d}} \times f \times \text{ceiling}}$$
+> $$
+> \texttt{UTILIZATION}_{\text{干净}} = \frac{\texttt{events}_{\texttt{-q}}}{t_{\texttt{-d}} \times f \times \text{ceiling}}
+> $$
 >
 > | | events 来源 | clk 来源 | 描述哪次执行 |
 > |---|---|---|---|
@@ -1463,8 +1483,10 @@ config 搜索，追的其实是一个不存在的 19% 差距。
 > **⚠ 更正（2026-08-13）：这三行不是三个独立来源，是同一个恒等式。**
 > 设无 padding 浪费（本例成立，$\texttt{ALU2\_events}=MNK/256$）：
 >
-> $$\frac{\text{achieved}}{\text{peak}} = \frac{2MNK/t}{20\cdot2048\cdot f}
-> = \frac{MNK}{20480\,t f} = \frac{\texttt{ALU2\_events}/\texttt{clk}}{80} = \texttt{ALU2\_UTILIZATION}$$
+> $$
+> \frac{\text{achieved}}{\text{peak}} = \frac{2MNK/t}{20\cdot2048\cdot f}
+> = \frac{MNK}{20480\,t f} = \frac{\texttt{ALU2\_events}/\texttt{clk}}{80} = \texttt{ALU2\_UTILIZATION}
+> $$
 >
 > 三者恒等，"一致"是必然的。
 >
@@ -1679,8 +1701,10 @@ decode shape $(4,4096,4096)$，Triton config $(16,256,32,2,8)$：
 
 预测公式（与实测完全一致）：
 
-$$\texttt{ALU2\_min} = \frac{M\cdot N\cdot K}{256}, \qquad
-\texttt{ALU2\_actual} = \frac{\lceil M/BM \rceil BM \cdot \lceil N/BN \rceil BN \cdot \lceil K/BK \rceil BK}{256}$$
+$$
+ALU2_{min} = \frac{M\cdot N\cdot K}{256}, \qquad
+ALU2_{actual} = \frac{\lceil M/BM \rceil BM \cdot \lceil N/BN \rceil BN \cdot \lceil K/BK \rceil BK}{256}
+$$
 
 $M=4$ 用 $BM=16$ → 4 倍浪费，公式预测 1,048,576，实测 1,048,576。
 
@@ -1707,7 +1731,9 @@ Triton 197 GB/s（48%）。该看哪个判据取决于 shape，统一方法见 2
 >
 > **这次采集真正证明的只有一条**（但它很硬，因为是纯事件计数）：
 >
-> $$\dfrac{M\cdot N\cdot K}{\texttt{ALU2\_events}} \text{ 在无浪费的 shape 上精确等于 } 256.0000$$
+> $$
+> \dfrac{M\cdot N\cdot K}{\texttt{ALU2\_events}} \text{ 在无浪费的 shape 上精确等于 } 256.0000
+> $$
 >
 > 有浪费的 4 个 shape 给出 234.06 / 245.76 / 252.06 等非 256 值，
 > 而这些值能被**波数量化模型**（$T$、20 个 workgroup，与计数器无关）精确复现 ——
@@ -1784,7 +1810,9 @@ Triton 197 GB/s（48%）。该看哪个判据取决于 shape，统一方法见 2
 每个 workgroup 循环 $\lceil T/20 \rceil$ 次（$T$ = tile 总数）。当 $T$ 不是 20 的整数倍时，
 最后一波只有部分 workgroup 有真活干，**其余的照样发 dpas，只是结果在写回时被丢弃**。
 
-$$\text{浪费} = \frac{20 \lceil T/20 \rceil}{T}$$
+$$
+浪费 = \frac{20 \lceil T/20 \rceil}{T}
+$$
 
 从浪费系数反解 $T$，四个形状**全部精确复现**：
 
@@ -1868,7 +1896,9 @@ $$\text{浪费} = \frac{20 \lceil T/20 \rceil}{T}$$
 
 用时间预算分解（`probe_residual_gap.py`，未受 profiling 干扰的时间，2.4 GHz）：
 
-$$T_{\text{floor}} = \frac{MNK/256}{80 \times 2.4\text{G}} = \frac{33{,}554{,}432}{192\times10^9} = 174.8\ \mu s$$
+$$
+T_{\text{floor}} = \frac{MNK/256}{80 \times 2.4\text{G}} = \frac{33{,}554{,}432}{192\times10^9} = 174.8\ \mu s
+$$
 
 这是 ALU2 满载且零浪费时的时间，**两个实现共用同一个 floor**（算法工作量相同）。
 
@@ -2096,7 +2126,9 @@ K 循环里仍有大量可以外提的 descriptor 重建。
 
 代价：
 
-$$28\ \text{条} \times \underbrace{448}_{K/BK} \times \underbrace{4096}_{\text{线程}} = 5.14\times10^7\ \text{条}$$
+$$
+28\ \text{条} \times \underbrace{448}_{K/BK} \times \underbrace{4096}_{\text{线程}} = 5.14\times10^7\ \text{条}
+$$
 
 **这和实验 5 里 $(256,4096,4096)$ 的 15 条立即数是同一个 backend 缺陷**，只是这里
 表现在 prefetch 路径上。区别在于本例 tile 大（$D = 16$ vs 8），固定开销摊得薄，
