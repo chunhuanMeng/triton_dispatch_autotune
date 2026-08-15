@@ -1036,7 +1036,7 @@ $$
 |---|---|---|
 | ALU2（XMX） | $\mathrm{ALU2\_events} / 80$ | **高**，反推得出，任何口径可用 |
 | ALU1（标量） | $\mathrm{ALU1\_events} / 160$ | **高**，同上 |
-| DRAM | $\mathrm{GPU\_MEMORY\_BYTE\_READ} / 407\mathrm{e}9 \times f$ | **高**，stream 实测（未 profiling） |
+| DRAM | $\mathrm{GPU\_MEMORY\_BYTE\_READ} / (407 \times 10^9 \times f)$ | **高**，stream 实测（未 profiling） |
 | LSU（L1） | **没有可信上限** | 只报**速率**（次/clk），横向对比，不要算百分比 |
 
 $(256,4096,4096)$ 实例（干净时间 117.3 / 116.1 μs，事件取自 `-q` 采集）：
@@ -1074,7 +1074,7 @@ Triton 额外背了 **3.4 倍的 L1 访问**和 **45 倍的 ALU1**，却只慢 1
 | 指标 | 饱和阈值 | 含义 |
 |---|---|---|
 | `XVE_INST_EXECUTED_ALU2_ALL_UTILIZATION[%]` | > 85% | 算力打满（XMX）。**必须用干净口径重建值**，`-q` 直读会系统性偏低 |
-| `GPU_MEMORY_BYTE_READ_RATE[GBpS]` | > 350 | 带宽打满（DRAM）。**注意这也是速率**：`-q` 直读会偏低，而参照值 407 GB/s 是干净口径实测的，两者不可直接比 —— 用 $\mathrm{GPU\_MEMORY\_BYTE\_READ} / t_{\text{干净}}$ 自己算 |
+| `GPU_MEMORY_BYTE_READ_RATE[GBpS]` | > 350 | 带宽打满（DRAM）。**注意这也是速率**：`-q` 直读会偏低，而参照值 407 GB/s 是干净口径实测的，两者不可直接比 —— 用 $\mathrm{GPU\_MEMORY\_BYTE\_READ} / {t_{\text{干净}}}$ 自己算 |
 | `XVE_SHARED_FUNCTION_ACCESS_HOLD[%]` | > 25% | 卡在 LSU 等共享单元 —— **LSU-bound 的主判据** |
 | `LOAD_STORE_CACHE_ACCESS / GpuCoreClocks` | **无可信上限** | 干净口径实测已达 89.70；只报速率、只做横比，**不要算百分比** |
 | `XVE_INST_EXECUTED_ALU1_ALL_UTILIZATION[%]` | > 85% | 标量管线打满（分母 160，厂商常数）。**同样要用重建值** |
