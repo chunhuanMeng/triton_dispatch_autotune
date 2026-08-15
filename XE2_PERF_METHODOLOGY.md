@@ -588,7 +588,7 @@ $$
 | **小计 $C_{\text{fix}}$** | **1** | **摊薄** |
 
 $$
-\left(\frac{\texttt{instr}}{\texttt{dpas}}\right)_{\min} = 1 + \underbrace{\frac{C_{\text{var}}}{D}}_{\text{每个 K 步都要付}} + \underbrace{\frac{C_{\text{fix}}}{U \cdot D}}_{\text{每个循环体付一次}}, \qquad C_{\text{var}}=17,\ C_{\text{fix}}=1
+\left(\frac{\mathrm{instr}}{\mathrm{dpas}}\right)_{\min} = 1 + \underbrace{\frac{C_{\text{var}}}{D}}_{\text{每个 K 步都要付}} + \underbrace{\frac{C_{\text{fix}}}{U \cdot D}}_{\text{每个循环体付一次}}, \qquad C_{\text{var}}=17,\ C_{\text{fix}}=1
 $$
 
 $C=18$ 取自上表的 oneDNN 实测（$256\times256$ tile）。$D$ 越大（tile 越大），
@@ -615,7 +615,7 @@ $C$ 会随 tile 增大略有上升（加载消息变多），但同步和控制�
 从计数器算实际值：
 
 $$
-\frac{\texttt{instr}}{\texttt{dpas}} = \frac{\texttt{XVE\_INST\_ISSUED\_ALL}}{\texttt{XVE\_INST\_EXECUTED\_ALU2\_ALL} / 8}
+\frac{\mathrm{instr}}{\mathrm{dpas}} = \frac{\mathrm{XVE\_INST\_ISSUED\_ALL}}{\mathrm{XVE\_INST\_EXECUTED\_ALU2\_ALL} / 8}
 $$
 
 **这个比值也可以直接从汇编算**（循环体总指令数 ÷ 循环体 dpas 数），两条路径互相印证：
@@ -746,7 +746,7 @@ bound 判定       回答「先修哪一项、能省多少」-> 需要干净时�
 #### 四个实例：不做任何 bound 判定，问题已经一目了然
 
 先说清楚这四个是什么 —— 全是 bf16 GEMM，$C_{M\times N} = A_{M\times K}\cdot B_{K\times N}$，
-config 记法为 $(BM,\ BN,\ BK,\ \texttt{num\_stages},\ \texttt{num\_warps})$：
+config 记法为 $(BM,\ BN,\ BK,\ \mathrm{num\_stages},\ \mathrm{num\_warps})$：
 
 | 代号 | shape $(M,N,K)$ | 什么场景 | Triton config | 备注 |
 |---|---|---|---|---|
@@ -899,8 +899,8 @@ LSU 访问次数和指令条数完全由代码决定，没有理论下界。**�
 |---|---|---|
 | $T_{\text{compute}}$ | $\dfrac{2MNK}{98.3\times10^{12}}$ | **中高**：256 MAC/slot 为实测，80 slots/clk 为厂商常数（见 1.7 节） |
 | $T_{\text{memory}}$ | $\dfrac{2(MK + g_m \cdot KN + MN)}{407\times10^9}$ | **高**：407 GB/s 由 stream 基准实测 |
-| $T_{\text{ALU1}}$ | $\dfrac{\texttt{ALU1 slots}}{160 \times f}$ | **中高**：160 是厂商常数（驱动 metric 定义），非独立实测 |
-| $T_{\text{LSU}}$ | $\dfrac{\texttt{L1访问次数}}{82 \times f}$ | **中**：上限未知，82 是实测封顶值，配合 `SF_HOLD` 使用 |
+| $T_{\text{ALU1}}$ | $\dfrac{\mathrm{ALU1\ slots}}{160 \times f}$ | **中高**：160 是厂商常数（驱动 metric 定义），非独立实测 |
+| $T_{\text{LSU}}$ | $\dfrac{\mathrm{L1访问次数}}{82 \times f}$ | **中**：上限未知，82 是实测封顶值，配合 `SF_HOLD` 使用 |
 | $T_{\text{latency}}$ | — | 开放项：无解析式，看 occupancy 与 `XVE_STALL` |
 
 > **不要把这几条当同等可靠。** 前三条有硬证据，$T_{\text{LSU}}$ 的分母是实测封顶而非真实上限，
@@ -2007,7 +2007,7 @@ LHS 的路径 —— 它改用 SLM 中转，每次 K 迭代 256 条 `load.slm`�
 >
 > | | 本表（21.22） | 计数器（19.84） |
 > |---|---|---|
-> | 来源 | 反汇编，静态数循环体 | $\texttt{ISSUED\_ALL}/(\mathrm{ALU2\_events}/8)$ |
+> | 来源 | 反汇编，静态数循环体 | $\mathrm{ISSUED\_ALL}/(\mathrm{ALU2\_events}/8)$ |
 > | 范围 | **只有 K 循环体** | **整个 kernel**，含 prologue/epilogue |
 > | 数的对象 | ASM 里写的每一行 | 硬件真正**发射**出去的指令 |
 >
@@ -2060,7 +2060,7 @@ TensorDescriptor LHS 有 64 条（$U=4$）。但**展开几乎不动下限** —
 | TensorDescriptor LHS | 64 | 4 | $1+\tfrac{17}{16}+\tfrac{1}{64} = 2.08$ | **19.84** | **9.55x** |
 
 表中的 **2.46 和 19.84 就是上面对比表最后一行的 instr/dpas**，由计数器算出：
-$\texttt{ISSUED\_ALL} / (\mathrm{ALU2\_events}/8)$，分别是
+$\mathrm{ISSUED\_ALL} / (\mathrm{ALU2\_events}/8)$，分别是
 $72{,}063{,}264 / 29{,}360{,}128$ 和 $582{,}553{,}616 / 29{,}360{,}128$。
 两者相除 $19.84/2.45 = 8.1$ 倍，就是换个写法带来的指令膨胀。
 
