@@ -249,7 +249,7 @@ MAC = 8 (repeat 行) × 16 (SIMD16 通道) × 8×2 (depth × bf16 打包) = 2048
 > | int8 | 4 | $8\times4=32$ | 4096 | **512** |
 >
 > **本文所有公式里的 256 都是 bf16 专用常量。**
-> 换成 int8，\(\mathrm{ALU2-min} = MNK/512\)，峰值也翻倍（20 × 4096 × 2.4 G = 196.6 TOPS）。
+> 换成 int8， $\mathrm{ALU2-min} = MNK/512$ ，峰值也翻倍（20 × 4096 × 2.4 G = 196.6 TOPS）。
 >
 > **int8 这一行已用计数器标定（2026-08-13）**，不是推的。
 > `unitrace -q -g ComputeBasic python validate_int8_slot.py`，`torch._int_mm` 跑四个 shape：
