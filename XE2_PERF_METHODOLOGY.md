@@ -254,7 +254,7 @@ MAC = 8 (repeat 行) × 16 (SIMD16 通道) × 8×2 (depth × bf16 打包) = 2048
 > **int8 这一行已用计数器标定（2026-08-13）**，不是推的。
 > `unitrace -q -g ComputeBasic python validate_int8_slot.py`，`torch._int_mm` 跑四个 shape：
 >
-> | shape | $MNK/\texttt{ALU2\_events}$ | UTIL% | TOPS |
+> | shape | $MNK/\mathrm{ALU2\_events}$ | UTIL% | TOPS |
 > |---|---:|---:|---:|
 > | $(8192,8192,8192)$ | **512.0000** | 93.78 | 184.33 |
 > | $(4096,4096,4096)$ | **512.0000** | 87.22 | 171.45 |
@@ -265,7 +265,7 @@ MAC = 8 (repeat 行) × 16 (SIMD16 通道) × 8×2 (depth × bf16 打包) = 2048
 >
 > | 列 | 怎么来的 | 有信息量吗 |
 > |---|---|---|
-> | $MNK/\texttt{ALU2\_events}$ | 纯事件计数 | ✅ **唯一真正的证据** |
+> | $MNK/\mathrm{ALU2\_events}$ | 纯事件计数 | ✅ **唯一真正的证据** |
 > | UTIL% | `ALU2_UTILIZATION` 直读 | ⚠️ `-q` 口径，欲得干净口径需按 2.8 节重建 |
 > | TOPS | $2MNK/t$，$t$ 取自 `-q` | ⚠️ `-q` 口径，真值更高 |
 >
@@ -282,7 +282,7 @@ MAC = 8 (repeat 行) × 16 (SIMD16 通道) × 8×2 (depth × bf16 打包) = 2048
 > 4. 旧峰值 234 TOPS 站不住：`ALU2_UTILIZATION` 读 96.49%，而 $189.70/234 = 81.1\%$。
 >    **注意这不是独立测量** —— 该计数器的定义分母就隐含了 $20\times4096$ OPS/clk，
 >    所以它说的其实是「**Intel 自己的驱动认为峰值是 196.6，不是 234**」。
->    真正独立的部分是 $MNK/\texttt{ALU2\_events} = 512.0000$ 这个纯计数结果。
+>    真正独立的部分是 $MNK/\mathrm{ALU2\_events} = 512.0000$ 这个纯计数结果。
 >
 > 复现脚本：`validate_int8_slot.py`。
 
@@ -307,16 +307,16 @@ M·N·K / ALU2_events = 8192³ / 2,147,483,648 = 256.0
 
 > **⚠ 先说结论的性质。** 本节旧版写「80 是从两个计数器反推出来的」，**那是错的**。
 >
-> 逐行验证发现 $\dfrac{\texttt{ALU2\_events}/\texttt{clk}}{\texttt{ALU2\_UTILIZATION}}$ 在**每一行**
+> 逐行验证发现 $\dfrac{\mathrm{ALU2\_events}/\texttt{clk}}{\texttt{ALU2\_UTILIZATION}}$ 在**每一行**
 > 都精确等于 80.000000（12 行，std = 0.000003）——因为驱动就是按
-> $\texttt{ALU2\_UTILIZATION} = \dfrac{\texttt{ALU2\_events}}{\texttt{clk}\times 80}$ 算的。
+> $\texttt{ALU2\_UTILIZATION} = \dfrac{\mathrm{ALU2\_events}}{\texttt{clk}\times 80}$ 算的。
 > **这是恒等式，不是测量。** 它只说明 Intel 的驱动认为上限是 80。
 >
 > **80 的真实性质：厂商常数**（写死在驱动的 metric 定义里），不是我们量出来的。
 > 同理 ALU0/ALU1 的 160 也是驱动常数，「两个 kernel 独立反推出 160」同样是恒等式。
 >
 > **真正独立的证据有两条：**
-> 1. $MNK / \texttt{ALU2\_events} = 256.0000$ —— **纯事件计数**，不涉及 UTILIZATION，这条是硬的
+> 1. $MNK / \mathrm{ALU2\_events} = 256.0000$ —— **纯事件计数**，不涉及 UTILIZATION，这条是硬的
 > 2. Intel 公布 B580 @2.85 GHz 为 117 TF/s $\Rightarrow \frac{117\text{e}12}{20\times2.85\text{e}9}=2052\approx 2048$
 >    FLOP/clk/core，与「80 slots/clk ÷ 20 core × 512 FLOP/slot = 2048」**一致**
 > 3. 旁证：oneDNN $8192^3$ 实测 96.83 TF/s = 98.3 的 98.5%。若真实峰值明显更高，
@@ -379,7 +379,7 @@ ceiling = 78.8038 / 0.9850 = 80.0000 slots/clk
 
 | # | 旁证 | 独立吗 |
 |---|---|---|
-| 1 | `256.0000`（MAC/slot）是整数 | ✅ **独立**，纯事件计数 $MNK/\texttt{ALU2\_events}$ |
+| 1 | `256.0000`（MAC/slot）是整数 | ✅ **独立**，纯事件计数 $MNK/\mathrm{ALU2\_events}$ |
 | 2 | `80.0000`（上限）、`4.0`（每 core）是整数 | ❌ **恒等式**，驱动定义如此，必然是整数 |
 | 3 | 反算 117 TF/s：$\frac{117\text{e}12}{20\times2.85\text{e}9}=2052.6\approx 2048$ | ✅ **独立**，来自 Intel 公布的 B580 规格，与计数器无关 |
 | 4 | 所有采样从未越过 80 | ⚠️ 弱，等价于说 `UTILIZATION` 从未超过 100% |
@@ -502,7 +502,7 @@ workgroup 有真活，其余照样发 dpas，结果写回时丢弃：$\text{浪�
 > $\dfrac{20\lceil T/20\rceil}{T}$ 同时是 dpas 浪费系数**和**时间代价。
 >
 > 它真正的用途是**检测负载不均衡**：算对手的**有效 MAC/slot**
-> $= \dfrac{MNK}{\texttt{ALU2\_events}}$，不等于 256 就说明它的 tile 数没落在波边界上。
+> $= \dfrac{MNK}{\mathrm{ALU2\_events}}$，不等于 256 就说明它的 tile 数没落在波边界上。
 >
 > **但别用它估收益。** $(2048,2048,2048)$ 上 oneDNN 的调度损失是 9.4%，
 > 实测 Triton 换 tile 后只拿到 **2.5%**（理论余量的 28%），
@@ -513,7 +513,7 @@ workgroup 有真活，其余照样发 dpas，结果写回时丢弃：$\text{浪�
 | 量 | 怎么得到 | 覆盖什么浪费 | 对谁成立 |
 |---|---|---|---|
 | **预测浪费** $\dfrac{\texttt{ALU2\_pred}}{\texttt{ALU2\_min}}$ | 纯算术 | 只有 **tile 边缘 padding** | 所有实现 |
-| **实测浪费** $\dfrac{\texttt{ALU2\_events}}{\texttt{ALU2\_min}}$ | 计数器 | tile padding **+ 被真正执行的废 tile** | 所有实现 |
+| **实测浪费** $\dfrac{\mathrm{ALU2\_events}}{\texttt{ALU2\_min}}$ | 计数器 | tile padding **+ 被真正执行的废 tile** | 所有实现 |
 | **调度代价** $\dfrac{20\lceil T/20\rceil}{T}$ | 纯算术（$T$ 由 tile 定） | **末波空转** | 所有实现 |
 
 > **最容易搞错的一点：实测浪费只对 persistent kernel 能看见调度损失。**
@@ -710,7 +710,7 @@ Triton 把它当**临时值**——每轮重新算全部字段，包括那些从
 
 | # | 体检项 | 怎么算 | 超标说明 | 要 profiler | 直接对应的修法 |
 |---|---|---|---|---|---|
-| 1 | **DPAS 工作量比** | $\dfrac{\texttt{ALU2\_events}}{MNK/256}$ | tile padding / 算废 tile | 要 | 减小 $BM$/$BN$ |
+| 1 | **DPAS 工作量比** | $\dfrac{\mathrm{ALU2\_events}}{MNK/256}$ | tile padding / 算废 tile | 要 | 减小 $BM$/$BN$ |
 | 1' | 同上的**纯算术预测** | $\dfrac{\texttt{ALU2\_pred}}{\texttt{ALU2\_min}}$ | 只覆盖 tile 边缘 padding | **不要** | 搜索阶段前置剪枝 |
 | 2 | **调度代价** | $\dfrac{20\lceil T/20\rceil}{T}$，$T$ = tile 总数 | 末波空转 | **不要** | **把 $T$ 做大**（tile 做细）；整除 20 是次要的 |
 | 3 | **并行度** | $\dfrac{T}{20}$ | $<1$ 就有 core 全程闲置 | **不要** | 减小 tile 把 grid 撑到 $\ge$ 20 |
@@ -1034,7 +1034,7 @@ $$
 
 | 资源 | 需要的 clk | 上限可信度 |
 |---|---|---|
-| ALU2（XMX） | $\texttt{ALU2\_events} / 80$ | **高**，反推得出，任何口径可用 |
+| ALU2（XMX） | $\mathrm{ALU2\_events} / 80$ | **高**，反推得出，任何口径可用 |
 | ALU1（标量） | $\texttt{ALU1\_events} / 160$ | **高**，同上 |
 | DRAM | $\texttt{GPU\_MEMORY\_BYTE\_READ} / 407\text{e}9 \times f$ | **高**，stream 实测（未 profiling） |
 | LSU（L1） | **没有可信上限** | 只报**速率**（次/clk），横向对比，不要算百分比 |
@@ -1208,7 +1208,7 @@ $(256,4096,4096)$ 恰在拐点（AI = 227.6 < 242，微弱内存受限），DPAS
 |---|---:|---|---|
 | ALU2（XMX）吞吐 | **80 slots/clk** | **厂商常数**：驱动的 `ALU2_UTILIZATION` 就按 $\frac{\text{events}}{\text{clk}\times80}$ 定义，反推是恒等式。旁证：Intel 公布 B580 117 TF/s @2.85GHz $\Rightarrow$ 2048 FLOP/clk/core，与之一致 | **中高**（厂商口径，非独立实测） |
 | 标量管线（ALU0/ALU1）吞吐 | **160 slots/clk** | 同为**厂商常数**（`ALU1_UTILIZATION` 的定义分母）；「两个 kernel 独立反推」也是恒等式 | **中高**（厂商口径） |
-| 1 slot = 256 MAC | **256**（bf16） | $MNK/\texttt{ALU2\_events}$ 精确等于 256.0000，10/10 shape | **高** |
+| 1 slot = 256 MAC | **256**（bf16） | $MNK/\mathrm{ALU2\_events}$ 精确等于 256.0000，10/10 shape | **高** |
 | 1 slot = 512 MAC | **512**（int8） | 同法标定，精确等于 512.0000，4/4 shape；`torch._int_mm`，ceiling 仍为 80.000 | **高** |
 | DRAM 可达带宽 | **~407 GB/s** | stream 类基准实测（copy 398、add 400、纯读 448、33.6 MB bf16 读 407.6） | **高** |
 | instr/dpas 下限 $1+18/D$ | $C_{\text{var}}{=}17,\ C_{\text{fix}}{=}1$ | 从 oneDNN K 循环逐条数出并按「是否随展开复制」分类；oneDNN 实测 1.52 vs 下限 1.56 = 0.97x | **中高**（$C$ 随 tile 尺寸变化非常数；展开系数 $U$ 影响 $<2\%$） |
@@ -1481,16 +1481,16 @@ config 搜索，追的其实是一个不存在的 19% 差距。
 | `ALU2_UTILIZATION` 计数器直读 | **98.5%** |
 
 > **⚠ 更正（2026-08-13）：这三行不是三个独立来源，是同一个恒等式。**
-> 设无 padding 浪费（本例成立，$\texttt{ALU2\_events}=MNK/256$）：
+> 设无 padding 浪费（本例成立，$\mathrm{ALU2\_events}=MNK/256$）：
 >
 > $$
 > \frac{\text{achieved}}{\text{peak}} = \frac{2MNK/t}{20\cdot2048\cdot f}
-> = \frac{MNK}{20480\,t f} = \frac{\texttt{ALU2\_events}/\texttt{clk}}{80} = \texttt{ALU2\_UTILIZATION}
+> = \frac{MNK}{20480\,t f} = \frac{\mathrm{ALU2\_events}/\texttt{clk}}{80} = \texttt{ALU2\_UTILIZATION}
 > $$
 >
 > 三者恒等，"一致"是必然的。
 >
-> **这张表真正验证的是**：$\texttt{ALU2\_events}$ 精确等于 $MNK/256$
+> **这张表真正验证的是**：$\mathrm{ALU2\_events}$ 精确等于 $MNK/256$
 > （否则三者就会差一个浪费系数）—— 这条是纯事件计数，站得住。
 > 至于"峰值是 98.3 而不是 117"，靠的是 1.7 节那两条独立证据（256 实测 + Intel 公布的 per-core 吞吐），不是这张表。
 
@@ -1732,14 +1732,14 @@ Triton 197 GB/s（48%）。该看哪个判据取决于 shape，统一方法见 2
 > **这次采集真正证明的只有一条**（但它很硬，因为是纯事件计数）：
 >
 > $$
-> \dfrac{M\cdot N\cdot K}{\texttt{ALU2\_events}} \text{ 在无浪费的 shape 上精确等于 } 256.0000
+> \dfrac{M\cdot N\cdot K}{\mathrm{ALU2\_events}} \text{ 在无浪费的 shape 上精确等于 } 256.0000
 > $$
 >
 > 有浪费的 4 个 shape 给出 234.06 / 245.76 / 252.06 等非 256 值，
 > 而这些值能被**波数量化模型**（$T$、20 个 workgroup，与计数器无关）精确复现 ——
 > **那才是真正的独立验证**，见实验 8b。
 
-> **读表前先澄清一个容易误读的点**：下表的「有效 MAC/slot」= $\dfrac{M\cdot N\cdot K}{\texttt{ALU2\_events}}$，
+> **读表前先澄清一个容易误读的点**：下表的「有效 MAC/slot」= $\dfrac{M\cdot N\cdot K}{\mathrm{ALU2\_events}}$，
 > 分子是**算法需要的** MAC，分母是**硬件实际执行的** slot 数。
 >
 > 物理上 **1 个 slot 恒等于 256 MAC**（$16$ 个 SIMD 通道 $\times$ $8\times2$ 个 K 步），这是硬件常量。
@@ -1753,7 +1753,7 @@ Triton 197 GB/s（48%）。该看哪个判据取决于 shape，统一方法见 2
 
 | 列 | 含义 | 来源 |
 |---|---|---|
-| **有效 MAC/slot** | $\dfrac{M\cdot N\cdot K}{\texttt{ALU2\_events}}$ | **纯事件计数，本表唯一真正的测量**。无浪费时应为 256 |
+| **有效 MAC/slot** | $\dfrac{M\cdot N\cdot K}{\mathrm{ALU2\_events}}$ | **纯事件计数，本表唯一真正的测量**。无浪费时应为 256 |
 | 浪费 | $\dfrac{256}{\text{有效 MAC/slot}}$ | 由上一列换算 |
 | **UTIL%** | DPAS 管线占空比 | `ALU2_UTILIZATION` 直读（**`-q` 口径**，欲得干净口径需按 2.8 节重建） |
 
@@ -1803,7 +1803,7 @@ Triton 197 GB/s（48%）。该看哪个判据取决于 shape，统一方法见 2
 
 > 这里保留「有效%」是因为**它就是本节要说的事**：管线看着忙，但有一部分白跑。
 > 注意它是**派生列**（$=\texttt{UTIL\%}/\text{浪费}$），不是独立测量 ——
-> 真正的测量只有「浪费」那一列背后的 $MNK/\texttt{ALU2\_events}$。
+> 真正的测量只有「浪费」那一列背后的 $MNK/\mathrm{ALU2\_events}$。
 > 实验 8 的大表里同一列已删除，因为那里所有 shape 摆在一起时它没有额外信息。
 
 机制：oneDNN 用 **20 个常驻 workgroup**（`gemm_kernel[SIMD16 {20;1;1} ...]`，每个 Xe core 一个），
@@ -2007,7 +2007,7 @@ LHS 的路径 —— 它改用 SLM 中转，每次 K 迭代 256 条 `load.slm`�
 >
 > | | 本表（21.22） | 计数器（19.84） |
 > |---|---|---|
-> | 来源 | 反汇编，静态数循环体 | $\texttt{ISSUED\_ALL}/(\texttt{ALU2\_events}/8)$ |
+> | 来源 | 反汇编，静态数循环体 | $\texttt{ISSUED\_ALL}/(\mathrm{ALU2\_events}/8)$ |
 > | 范围 | **只有 K 循环体** | **整个 kernel**，含 prologue/epilogue |
 > | 数的对象 | ASM 里写的每一行 | 硬件真正**发射**出去的指令 |
 >
@@ -2060,7 +2060,7 @@ TensorDescriptor LHS 有 64 条（$U=4$）。但**展开几乎不动下限** —
 | TensorDescriptor LHS | 64 | 4 | $1+\tfrac{17}{16}+\tfrac{1}{64} = 2.08$ | **19.84** | **9.55x** |
 
 表中的 **2.46 和 19.84 就是上面对比表最后一行的 instr/dpas**，由计数器算出：
-$\texttt{ISSUED\_ALL} / (\texttt{ALU2\_events}/8)$，分别是
+$\texttt{ISSUED\_ALL} / (\mathrm{ALU2\_events}/8)$，分别是
 $72{,}063{,}264 / 29{,}360{,}128$ 和 $582{,}553{,}616 / 29{,}360{,}128$。
 两者相除 $19.84/2.45 = 8.1$ 倍，就是换个写法带来的指令膨胀。
 
