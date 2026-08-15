@@ -774,8 +774,8 @@ config 记法为 $(BM,\ BN,\ BK,\ \mathrm{num-stages},\ \mathrm{num-warps})$：
 - **② 的 DPAS 4.00**： $BM = 16$ 去装 $M = 4$， $16/4 = 4$ 倍全是 padding 出来的空行
 - **② 的并行度 0.8**： $T = \lceil 4/16\rceil \times \lceil 4096/256\rceil = 1\times16 = 16$ 个 workgroup，
   而 GPU 有 20 个 Xe core → **4 个核全程闲置**
-- **① 的并行度 6.4**：$T = \lceil 256/128\rceil \times \lceil 4096/64\rceil = 2\times 64 = 128$，$128/20 = 6.4$ 波
-- **① 的指令比 3.7x**：$D = \frac{128\times64\times16}{8\times2048} = 8$ → 下限 $1+\frac{17}{8}+\frac{1}{2\times8} \approx 3.19$，
+- **① 的并行度 6.4**： $T = \lceil 256/128\rceil \times \lceil 4096/64\rceil = 2\times 64 = 128$ ， $128/20 = 6.4$ 波
+- **① 的指令比 3.7x**： $D = \frac{128\times64\times16}{8\times2048} = 8$ → 下限 $1+\frac{17}{8}+\frac{1}{2\times8} \approx 3.19$ ，
   实测 `instr/dpas` $=11.74$ → $11.74/3.19 = 3.7$
 
 ② 的两个 ❌ 和 ④ 的两个 ❌ **不用任何天花板、不用干净时间**就能看出来，修法也是现成的
