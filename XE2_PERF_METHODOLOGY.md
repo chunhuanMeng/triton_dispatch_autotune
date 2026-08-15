@@ -66,7 +66,7 @@ Arc Pro B60 (BMG-G21)                    @ 2.4 GHz
 
 并行性证据：`XVE_MULTIPLE_PIPE_ACTIVE[%]` 定义为「至少两条管线（ALU0/ALU1/ALU2）同时执行」，实测 Triton kernel 为 17.3%，说明标量运算和矩阵运算确实在重叠执行。
 
-全卡规模：$20 \times 8 = 160$ 个 XVE，同样 $20 \times 8 = 160$ 个 XMX，$160 \times 8 = 1280$ 个硬件线程。
+全卡规模：20 × 8 = 160 个 XVE，同样 20 × 8 = 160 个 XMX，160 × 8 = 1280 个硬件线程。
 
 两个 160 数值相同但含义不同：后文 1.7 节的 ALU2 slot 推导用的是 **XMX 的 160**（得到 80 slots/clk），
 而标量管线上限 160 slots/clk 用的是 **XVE 的 160**。
@@ -249,7 +249,7 @@ MAC = 8 (repeat 行) × 16 (SIMD16 通道) × 8×2 (depth × bf16 打包) = 2048
 > | int8 | 4 | $8\times4=32$ | 4096 | **512** |
 >
 > **本文所有公式里的 256 都是 bf16 专用常量。**
-> 换成 int8，$\texttt{ALU2\_min} = MNK/512$，峰值也翻倍（$20\times4096\times2.4\text{G} = 196.6$ TOPS）。
+> 换成 int8，$\mathrm{ALU2\_min} = MNK/512$，峰值也翻倍（20 × 4096 × 2.4 G = 196.6 TOPS）。
 >
 > **int8 这一行已用计数器标定（2026-08-13）**，不是推的。
 > `unitrace -q -g ComputeBasic python validate_int8_slot.py`，`torch._int_mm` 跑四个 shape：
