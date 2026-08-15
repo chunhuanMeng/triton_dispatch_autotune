@@ -249,7 +249,7 @@ MAC = 8 (repeat 行) × 16 (SIMD16 通道) × 8×2 (depth × bf16 打包) = 2048
 > | int8 | 4 | $8\times4=32$ | 4096 | **512** |
 >
 > **本文所有公式里的 256 都是 bf16 专用常量。**
-> 换成 int8，$\text{ALU2-min} = MNK/512$，峰值也翻倍（20 × 4096 × 2.4 G = 196.6 TOPS）。
+> 换成 int8，$\mathrm{ALU2-min} = MNK/512$，峰值也翻倍（20 × 4096 × 2.4 G = 196.6 TOPS）。
 >
 > **int8 这一行已用计数器标定（2026-08-13）**，不是推的。
 > `unitrace -q -g ComputeBasic python validate_int8_slot.py`，`torch._int_mm` 跑四个 shape：
@@ -615,7 +615,7 @@ $C$ 会随 tile 增大略有上升（加载消息变多），但同步和控制�
 从计数器算实际值：
 
 $$
-\frac{\text{instr}}{\text{dpas}} = \frac{\text{XVE-INST-ISSUED-ALL}}{\text{XVE-INST-EXECUTED-ALU2-ALL} / 8}
+\frac{\mathrm{instr}}{\mathrm{dpas}} = \frac{\mathrm{XVE-INST-ISSUED-ALL}}{\mathrm{XVE-INST-EXECUTED-ALU2-ALL} / 8}
 $$
 
 **这个比值也可以直接从汇编算**（循环体总指令数 ÷ 循环体 dpas 数），两条路径互相印证：
@@ -746,7 +746,7 @@ bound 判定       回答「先修哪一项、能省多少」-> 需要干净时�
 #### 四个实例：不做任何 bound 判定，问题已经一目了然
 
 先说清楚这四个是什么 —— 全是 bf16 GEMM，$C(M\times N) = A(M\times K)\cdot B(K\times N)$，
-config 记法为 $(BM,\ BN,\ BK,\ \text{num-stages},\ \text{num-warps})$：
+config 记法为 $(BM,\ BN,\ BK,\ \mathrm{num-stages},\ \mathrm{num-warps})$：
 
 | 代号 | shape $(M,N,K)$ | 什么场景 | Triton config | 备注 |
 |---|---|---|---|---|
@@ -1034,9 +1034,9 @@ $$
 
 | 资源 | 需要的 clk | 上限可信度 |
 |---|---|---|
-| ALU2（XMX） | $\text{ALU2-events} / 80$ | **高**，反推得出，任何口径可用 |
-| ALU1（标量） | $\text{ALU1-events} / 160$ | **高**，同上 |
-| DRAM | $\text{GPU-MEMORY-BYTE-READ} / (407 \times 10^9 \times f)$ | **高**，stream 实测（未 profiling） |
+| ALU2（XMX） | $\mathrm{ALU2-events} / 80$ | **高**，反推得出，任何口径可用 |
+| ALU1（标量） | $\mathrm{ALU1-events} / 160$ | **高**，同上 |
+| DRAM | $\mathrm{GPU-MEMORY-BYTE-READ} / (407 \times 10^9 \times f)$ | **高**，stream 实测（未 profiling） |
 | LSU（L1） | **没有可信上限** | 只报**速率**（次/clk），横向对比，不要算百分比 |
 
 $(256,4096,4096)$ 实例（干净时间 117.3 / 116.1 μs，事件取自 `-q` 采集）：
@@ -1074,7 +1074,7 @@ Triton 额外背了 **3.4 倍的 L1 访问**和 **45 倍的 ALU1**，却只慢 1
 | 指标 | 饱和阈值 | 含义 |
 |---|---|---|
 | `XVE_INST_EXECUTED_ALU2_ALL_UTILIZATION[%]` | > 85% | 算力打满（XMX）。**必须用干净口径重建值**，`-q` 直读会系统性偏低 |
-| `GPU_MEMORY_BYTE_READ_RATE[GBpS]` | > 350 | 带宽打满（DRAM）。**注意这也是速率**：`-q` 直读会偏低，而参照值 407 GB/s 是干净口径实测的，两者不可直接比 —— 用 $\text{GPU-MEMORY-BYTE-READ} / \text{clean time}$ 自己算 |
+| `GPU_MEMORY_BYTE_READ_RATE[GBpS]` | > 350 | 带宽打满（DRAM）。**注意这也是速率**：`-q` 直读会偏低，而参照值 407 GB/s 是干净口径实测的，两者不可直接比 —— 用 $\mathrm{GPU-MEMORY-BYTE-READ} / t$ 自己算 |
 | `XVE_SHARED_FUNCTION_ACCESS_HOLD[%]` | > 25% | 卡在 LSU 等共享单元 —— **LSU-bound 的主判据** |
 | `LOAD_STORE_CACHE_ACCESS / GpuCoreClocks` | **无可信上限** | 干净口径实测已达 89.70；只报速率、只做横比，**不要算百分比** |
 | `XVE_INST_EXECUTED_ALU1_ALL_UTILIZATION[%]` | > 85% | 标量管线打满（分母 160，厂商常数）。**同样要用重建值** |
