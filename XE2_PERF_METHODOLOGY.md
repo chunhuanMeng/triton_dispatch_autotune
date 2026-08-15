@@ -183,7 +183,7 @@ Triton 的 L1 访问数是 oneDNN 的 3.4 倍，但 DRAM 流量几乎相同 —�
 即：
 
 $$
-  ISSUED \approx \frac{\texttt{ALU2}}{8} + \texttt{ALU0} + \texttt{ALU1} + \texttt{SEND} + \text{控制流}
+  ISSUED \approx \frac{\text{ALU2}}{8} + \text{ALU0} + \text{ALU1} + \text{SEND} + \text{控制流}
 $$
 
 残余的 1–6% 是 `jmpi`/`cmp`/`sync` 这类控制流指令 —— 被发射了，但不落在这四条管线上。
@@ -249,12 +249,12 @@ MAC = 8 (repeat 行) × 16 (SIMD16 通道) × 8×2 (depth × bf16 打包) = 2048
 > | int8 | 4 | $8\times4=32$ | 4096 | **512** |
 >
 > **本文所有公式里的 256 都是 bf16 专用常量。**
-> 换成 int8，$\mathrm{ALU2\_min} = MNK/512$，峰值也翻倍（20 × 4096 × 2.4 G = 196.6 TOPS）。
+> 换成 int8，$\text{ALU2-min} = MNK/512$，峰值也翻倍（20 × 4096 × 2.4 G = 196.6 TOPS）。
 >
 > **int8 这一行已用计数器标定（2026-08-13）**，不是推的。
 > `unitrace -q -g ComputeBasic python validate_int8_slot.py`，`torch._int_mm` 跑四个 shape：
 >
-> | shape | $MNK/\mathrm{ALU2\_events}$ | UTIL% | TOPS |
+> | shape | $MNK/\text{ALU2-events}$ | UTIL% | TOPS |
 > |---|---:|---:|---:|
 > | $(8192,8192,8192)$ | **512.0000** | 93.78 | 184.33 |
 > | $(4096,4096,4096)$ | **512.0000** | 87.22 | 171.45 |
@@ -265,7 +265,7 @@ MAC = 8 (repeat 行) × 16 (SIMD16 通道) × 8×2 (depth × bf16 打包) = 2048
 >
 > | 列 | 怎么来的 | 有信息量吗 |
 > |---|---|---|
-> | $MNK/\mathrm{ALU2\_events}$ | 纯事件计数 | ✅ **唯一真正的证据** |
+> | $MNK/\text{ALU2-events}$ | 纯事件计数 | ✅ **唯一真正的证据** |
 > | UTIL% | `ALU2_UTILIZATION` 直读 | ⚠️ `-q` 口径，欲得干净口径需按 2.8 节重建 |
 > | TOPS | $2MNK/t$，$t$ 取自 `-q` | ⚠️ `-q` 口径，真值更高 |
 >
@@ -282,7 +282,7 @@ MAC = 8 (repeat 行) × 16 (SIMD16 通道) × 8×2 (depth × bf16 打包) = 2048
 > 4. 旧峰值 234 TOPS 站不住：`ALU2_UTILIZATION` 读 96.49%，而 $189.70/234 = 81.1\%$。
 >    **注意这不是独立测量** —— 该计数器的定义分母就隐含了 $20\times4096$ OPS/clk，
 >    所以它说的其实是「**Intel 自己的驱动认为峰值是 196.6，不是 234**」。
->    真正独立的部分是 $MNK/\mathrm{ALU2\_events} = 512.0000$ 这个纯计数结果。
+>    真正独立的部分是 $MNK/\text{ALU2-events} = 512.0000$ 这个纯计数结果。
 >
 > 复现脚本：`validate_int8_slot.py`。
 
@@ -307,16 +307,16 @@ M·N·K / ALU2_events = 8192³ / 2,147,483,648 = 256.0
 
 > **⚠ 先说结论的性质。** 本节旧版写「80 是从两个计数器反推出来的」，**那是错的**。
 >
-> 逐行验证发现 $\dfrac{\mathrm{ALU2\_events}/\mathrm{clk}}{\mathrm{ALU2\_UTILIZATION}}$ 在**每一行**
+> 逐行验证发现 $\dfrac{\text{ALU2-events}/\mathrm{clk}}{\text{ALU2-UTILIZATION}}$ 在**每一行**
 > 都精确等于 80.000000（12 行，std = 0.000003）——因为驱动就是按
-> $\mathrm{ALU2\_UTILIZATION} = \dfrac{\mathrm{ALU2\_events}}{\mathrm{clk}\times 80}$ 算的。
+> $\text{ALU2-UTILIZATION} = \dfrac{\text{ALU2-events}}{\mathrm{clk}\times 80}$ 算的。
 > **这是恒等式，不是测量。** 它只说明 Intel 的驱动认为上限是 80。
 >
 > **80 的真实性质：厂商常数**（写死在驱动的 metric 定义里），不是我们量出来的。
 > 同理 ALU0/ALU1 的 160 也是驱动常数，「两个 kernel 独立反推出 160」同样是恒等式。
 >
 > **真正独立的证据有两条：**
-> 1. $MNK / \mathrm{ALU2\_events} = 256.0000$ —— **纯事件计数**，不涉及 UTILIZATION，这条是硬的
+> 1. $MNK / \text{ALU2-events} = 256.0000$ —— **纯事件计数**，不涉及 UTILIZATION，这条是硬的
 > 2. Intel 公布 B580 @2.85 GHz 为 117 TF/s $\Rightarrow \frac{117\text{e}12}{20\times2.85\text{e}9}=2052\approx 2048$
 >    FLOP/clk/core，与「80 slots/clk ÷ 20 core × 512 FLOP/slot = 2048」**一致**
 > 3. 旁证：oneDNN $8192^3$ 实测 96.83 TF/s = 98.3 的 98.5%。若真实峰值明显更高，
@@ -379,7 +379,7 @@ ceiling = 78.8038 / 0.9850 = 80.0000 slots/clk
 
 | # | 旁证 | 独立吗 |
 |---|---|---|
-| 1 | `256.0000`（MAC/slot）是整数 | ✅ **独立**，纯事件计数 $MNK/\mathrm{ALU2\_events}$ |
+| 1 | `256.0000`（MAC/slot）是整数 | ✅ **独立**，纯事件计数 $MNK/\text{ALU2-events}$ |
 | 2 | `80.0000`（上限）、`4.0`（每 core）是整数 | ❌ **恒等式**，驱动定义如此，必然是整数 |
 | 3 | 反算 117 TF/s：$\frac{117\text{e}12}{20\times2.85\text{e}9}=2052.6\approx 2048$ | ✅ **独立**，来自 Intel 公布的 B580 规格，与计数器无关 |
 | 4 | 所有采样从未越过 80 | ⚠️ 弱，等价于说 `UTILIZATION` 从未超过 100% |
@@ -437,15 +437,15 @@ ceiling = 78.8038 / 0.9850 = 80.0000 slots/clk
 #### 第一栏：DPAS 预算
 
 $$
-  ALU2_{min} = \frac{M\cdot N\cdot K}{256}
+\mathit{ALU2-min} = \frac{M\cdot N\cdot K}{256}
 \qquad
-ALU2_{pred} = \frac{\lceil \frac{M}{BM}\rceil BM \cdot \lceil \frac{N}{BN}\rceil BN \cdot \lceil \frac{K}{BK}\rceil BK}{256}
+\mathit{ALU2-pred} = \frac{\lceil \frac{M}{BM}\rceil BM \cdot \lceil \frac{N}{BN}\rceil BN \cdot \lceil \frac{K}{BK}\rceil BK}{256}
 $$
 
 $$
-  预测浪费 = \frac{ALU2_{pred}}{ALU2_{min}}
+  预测浪费 = \frac{\text{ALU2-pred}}{\text{ALU2-min}}
 \qquad
-  实测浪费 = \frac{ALU2_{events}}{ALU2_{min}}
+  实测浪费 = \frac{\text{ALU2-events}}{\text{ALU2-min}}
 $$
 
 **这两个不是同一回事，别混用。**
@@ -502,7 +502,7 @@ workgroup 有真活，其余照样发 dpas，结果写回时丢弃：$\text{浪�
 > $\dfrac{20\lceil T/20\rceil}{T}$ 同时是 dpas 浪费系数**和**时间代价。
 >
 > 它真正的用途是**检测负载不均衡**：算对手的**有效 MAC/slot**
-> $= \dfrac{MNK}{\mathrm{ALU2\_events}}$，不等于 256 就说明它的 tile 数没落在波边界上。
+> $= \dfrac{MNK}{\text{ALU2-events}}$，不等于 256 就说明它的 tile 数没落在波边界上。
 >
 > **但别用它估收益。** $(2048,2048,2048)$ 上 oneDNN 的调度损失是 9.4%，
 > 实测 Triton 换 tile 后只拿到 **2.5%**（理论余量的 28%），
@@ -512,8 +512,8 @@ workgroup 有真活，其余照样发 dpas，结果写回时丢弃：$\text{浪�
 
 | 量 | 怎么得到 | 覆盖什么浪费 | 对谁成立 |
 |---|---|---|---|
-| **预测浪费** $\dfrac{\mathrm{ALU2\_pred}}{\mathrm{ALU2\_min}}$ | 纯算术 | 只有 **tile 边缘 padding** | 所有实现 |
-| **实测浪费** $\dfrac{\mathrm{ALU2\_events}}{\mathrm{ALU2\_min}}$ | 计数器 | tile padding **+ 被真正执行的废 tile** | 所有实现 |
+| **预测浪费** $\dfrac{\text{ALU2-pred}}{\text{ALU2-min}}$ | 纯算术 | 只有 **tile 边缘 padding** | 所有实现 |
+| **实测浪费** $\dfrac{\text{ALU2-events}}{\text{ALU2-min}}$ | 计数器 | tile padding **+ 被真正执行的废 tile** | 所有实现 |
 | **调度代价** $\dfrac{20\lceil T/20\rceil}{T}$ | 纯算术（$T$ 由 tile 定） | **末波空转** | 所有实现 |
 
 > **最容易搞错的一点：实测浪费只对 persistent kernel 能看见调度损失。**
@@ -583,15 +583,15 @@ $$
 | 指针 / descriptor 推进 | 6 | ×$U$ |
 | systolic 同步 | 4 | ×$U$ |
 | workgroup 同步 | 2 | ×$U$ |
-| **小计 $C_{\text{var}}$** | **17** | **不摊薄** |
+| **小计 $\text{C-var}$** | **17** | **不摊薄** |
 | 循环控制 `jmpi` | 1 | ×1（整个循环体只付一次） |
-| **小计 $C_{\text{fix}}$** | **1** | **摊薄** |
+| **小计 $\text{C-fix}$** | **1** | **摊薄** |
 
 $$
-\left(\frac{\mathrm{instr}}{\mathrm{dpas}}\right)_{\min} = 1 + \underbrace{\frac{C_{\text{var}}}{D}}_{\text{每个 K 步都要付}} + \underbrace{\frac{C_{\text{fix}}}{U \cdot D}}_{\text{每个循环体付一次}}, \qquad C_{\text{var}}=17,\ C_{\text{fix}}=1
+\mathit{minimum\ instr/dpas} = 1 + \frac{\text{C-var}}{D} + \frac{\text{C-fix}}{U \cdot D}, \qquad \text{C-var} = 17,\ \text{C-fix} = 1
 $$
 
-$C=18$ 取自上表的 oneDNN 实测（$256\times256$ tile）。$D$ 越大（tile 越大），
+$C = 18$ 取自上表的 oneDNN 实测（$256\times256$ tile）。$D$ 越大（tile 越大），
 这 18 条固定开销被摊得越薄 —— 这就是大 tile 的价值。
 $C$ 会随 tile 增大略有上升（加载消息变多），但同步和控制部分基本固定。
 
@@ -605,7 +605,7 @@ $C$ 会随 tile 增大略有上升（加载消息变多），但同步和控制�
 > $U=2$ 本身也有硬证据：循环计数器 `add r254.7 += 2`，退出条件 `cmp r254.7 == 448`，
 > 而 $448 = K/BK = 14336/32$。
 >
-> 数值上，$D=16$ 时：$U{=}1 \to 2.125$、$U{=}2 \to 2.094$、$U{=}4 \to 2.078$，相差 2%。
+> 数值上，$D = 16$ 时：$U = 1 \rightarrow 2.125$、$U = 2 \rightarrow 2.094$、$U = 4 \rightarrow 2.078$，相差 2%。
 > **所以实用上直接用 $1+18/D$ 就行**，不必为了 $U$ 去 dump 汇编。
 > （早期版本写过 $1+C/(U{\cdot}D)$，**那是错的** —— 它把 17 条不能摊薄的开销也算成了可摊薄，
 > 会把下限压得太低、把膨胀倍数抬得太高。）
@@ -615,7 +615,7 @@ $C$ 会随 tile 增大略有上升（加载消息变多），但同步和控制�
 从计数器算实际值：
 
 $$
-\frac{\mathrm{instr}}{\mathrm{dpas}} = \frac{\mathrm{XVE\_INST\_ISSUED\_ALL}}{\mathrm{XVE\_INST\_EXECUTED\_ALU2\_ALL} / 8}
+\frac{\text{instr}}{\text{dpas}} = \frac{\text{XVE-INST-ISSUED-ALL}}{\text{XVE-INST-EXECUTED-ALU2-ALL} / 8}
 $$
 
 **这个比值也可以直接从汇编算**（循环体总指令数 ÷ 循环体 dpas 数），两条路径互相印证：
@@ -681,7 +681,7 @@ Triton 的 76 条里，有 **15 条是把写死的立即数写进 descriptor 寄
 代价：
 
 $$
-15\ \text{条} \times \underbrace{256}_{K/BK} \times \underbrace{1024}_{\text{线程}} = 3.93\times10^6\ \text{条纯浪费指令}
+15\ \text{条} \times 256\ \text{(K/BK)} \times 1024\ \text{(线程)} = 3.93\times10^6\ \text{条纯浪费指令}
 $$
 
 **准确的表述**：oneDNN 把 descriptor 当**持久对象**——建一次，循环内只推坐标；
@@ -710,13 +710,13 @@ Triton 把它当**临时值**——每轮重新算全部字段，包括那些从
 
 | # | 体检项 | 怎么算 | 超标说明 | 要 profiler | 直接对应的修法 |
 |---|---|---|---|---|---|
-| 1 | **DPAS 工作量比** | $\dfrac{\mathrm{ALU2\_events}}{MNK/256}$ | tile padding / 算废 tile | 要 | 减小 $BM$/$BN$ |
-| 1' | 同上的**纯算术预测** | $\dfrac{\mathrm{ALU2\_pred}}{\mathrm{ALU2\_min}}$ | 只覆盖 tile 边缘 padding | **不要** | 搜索阶段前置剪枝 |
+| 1 | **DPAS 工作量比** | $\dfrac{\text{ALU2-events}}{MNK/256}$ | tile padding / 算废 tile | 要 | 减小 $BM$/$BN$ |
+| 1' | 同上的**纯算术预测** | $\dfrac{\text{ALU2-pred}}{\text{ALU2-min}}$ | 只覆盖 tile 边缘 padding | **不要** | 搜索阶段前置剪枝 |
 | 2 | **调度代价** | $\dfrac{20\lceil T/20\rceil}{T}$，$T$ = tile 总数 | 末波空转 | **不要** | **把 $T$ 做大**（tile 做细）；整除 20 是次要的 |
 | 3 | **并行度** | $\dfrac{T}{20}$ | $<1$ 就有 core 全程闲置 | **不要** | 减小 tile 把 grid 撑到 $\ge$ 20 |
-| 4 | **DRAM 流量比** | $\dfrac{\mathrm{BYTE\_READ}}{2(MK+KN+MN)}$ | L2 blocking 差，B 被重复读 | 要 | 增大 $BM$ / 调 `GROUP_M` |
-| 5 | **指令比** | $\dfrac{\texttt{instr/dpas}}{1+17/D+1/(UD)}$（2.1 第三栏） | 地址/descriptor 冗余 | 要 | 外提 descriptor（backend） |
-| 6 | **访存碎片度** | $\dfrac{\mathrm{L1\_ACCESS}}{\mathrm{SEND}}$ | 一条消息展开成太多次 L1 访问（oneDNN $\approx$ 13） | 要 | 增大 $BK$ / 去冗余 prefetch |
+| 4 | **DRAM 流量比** | $\dfrac{\text{BYTE-READ}}{2(MK+KN+MN)}$ | L2 blocking 差，B 被重复读 | 要 | 增大 $BM$ / 调 `GROUP_M` |
+| 5 | **指令比** | $\dfrac{\text{instr/dpas}}{1+17/D+1/(UD)}$（2.1 第三栏） | 地址/descriptor 冗余 | 要 | 外提 descriptor（backend） |
+| 6 | **访存碎片度** | $\dfrac{\text{L1-ACCESS}}{\text{SEND}}$ | 一条消息展开成太多次 L1 访问（oneDNN $\approx$ 13） | 要 | 增大 $BK$ / 去冗余 prefetch |
 | 7 | **SLM 流量** | `SLM_BYTE_READ` | $\ne 0$ 就说明没走 block2D 直出 | 要 | 换回 `make_block_ptr` |
 | 8 | **寄存器溢出** | `n_spills` | $\ne 0$ 直接废 | **不要**（编译期） | 换 config |
 
@@ -733,7 +733,7 @@ Triton 把它当**临时值**——每轮重新算全部字段，包括那些从
 > 而 `*_UTILIZATION`、`XVE_STALL`、`SF_HOLD` 都不行（见 2.8 节）。
 >
 > **唯一需要干净时间的是最后那一步**：
-> $\dfrac{t_{\text{实测}}}{\max(\text{各资源下界})}$ —— 那一步才是「bound 分析」。
+> $\dfrac{\text{measured time}}{\max(\text{各资源下界})}$ —— 那一步才是「bound 分析」。
 
 **两者的分工：**
 
@@ -745,8 +745,8 @@ bound 判定       回答「先修哪一项、能省多少」-> 需要干净时�
 
 #### 四个实例：不做任何 bound 判定，问题已经一目了然
 
-先说清楚这四个是什么 —— 全是 bf16 GEMM，$C_{M\times N} = A_{M\times K}\cdot B_{K\times N}$，
-config 记法为 $(BM,\ BN,\ BK,\ \mathrm{num\_stages},\ \mathrm{num\_warps})$：
+先说清楚这四个是什么 —— 全是 bf16 GEMM，$C(M\times N) = A(M\times K)\cdot B(K\times N)$，
+config 记法为 $(BM,\ BN,\ BK,\ \text{num-stages},\ \text{num-warps})$：
 
 | 代号 | shape $(M,N,K)$ | 什么场景 | Triton config | 备注 |
 |---|---|---|---|---|
@@ -897,17 +897,17 @@ LSU 访问次数和指令条数完全由代码决定，没有理论下界。**�
 
 | 天花板 | 公式 | 证据强度 |
 |---|---|---|
-| $T_{\text{compute}}$ | $\dfrac{2MNK}{98.3\times10^{12}}$ | **中高**：256 MAC/slot 为实测，80 slots/clk 为厂商常数（见 1.7 节） |
-| $T_{\text{memory}}$ | $\dfrac{2(MK + g_m \cdot KN + MN)}{407\times10^9}$ | **高**：407 GB/s 由 stream 基准实测 |
-| $T_{\text{ALU1}}$ | $\dfrac{\mathrm{ALU1\ slots}}{160 \times f}$ | **中高**：160 是厂商常数（驱动 metric 定义），非独立实测 |
-| $T_{\text{LSU}}$ | $\dfrac{\mathrm{L1访问次数}}{82 \times f}$ | **中**：上限未知，82 是实测封顶值，配合 `SF_HOLD` 使用 |
-| $T_{\text{latency}}$ | — | 开放项：无解析式，看 occupancy 与 `XVE_STALL` |
+| $\text{T-compute}$ | $\dfrac{2MNK}{98.3\times10^{12}}$ | **中高**：256 MAC/slot 为实测，80 slots/clk 为厂商常数（见 1.7 节） |
+| $\text{T-memory}$ | $\dfrac{2(MK + \text{g-m} \cdot KN + MN)}{407\times10^9}$ | **高**：407 GB/s 由 stream 基准实测 |
+| $\text{T-ALU1}$ | $\dfrac{\mathrm{ALU1\ slots}}{160 \times f}$ | **中高**：160 是厂商常数（驱动 metric 定义），非独立实测 |
+| $\text{T-LSU}$ | $\dfrac{\mathrm{L1访问次数}}{82 \times f}$ | **中**：上限未知，82 是实测封顶值，配合 `SF_HOLD` 使用 |
+| $\text{T-latency}$ | — | 开放项：无解析式，看 occupancy 与 `XVE_STALL` |
 
-> **不要把这几条当同等可靠。** 前三条有硬证据，$T_{\text{LSU}}$ 的分母是实测封顶而非真实上限，
+> **不要把这几条当同等可靠。** 前三条有硬证据，$\text{T-LSU}$ 的分母是实测封顶而非真实上限，
 > 所以它的百分比只能做横向对比，不能当绝对饱和度。详见 2.11 节。
 >
-> 既往版本列过一条 $T_{\text{issue}}$（分母 160），**已删除** —— 实验 10 证明 160 属于
-> ALU0/ALU1 执行槽，`ISSUED` 的上限仍然未知。要判「指令太多」请用 $T_{\text{ALU1}}$。
+> 既往版本列过一条 $\text{T-issue}$（分母 160），**已删除** —— 实验 10 证明 160 属于
+> ALU0/ALU1 执行槽，`ISSUED` 的上限仍然未知。要判「指令太多」请用 $\text{T-ALU1}$。
 
 机器平衡点：
 
@@ -964,7 +964,7 @@ $$
 > | 浪费 | 判据 | 例子 |
 > |---|---|---|
 > | **DPAS 工作量浪费** | `ALU2_events/(MNK/256) > 1.2` | $(4,4096,4096)$ Triton：$BM{=}16$ 装 $M{=}4$ → 4.0x |
-> | **DRAM 流量浪费** | `BYTE_READ / 理论下界 > 1.3` | $BM$ 太小 → B panel 被重复读 $g_m$ 次 |
+> | **DRAM 流量浪费** | `BYTE_READ / 理论下界 > 1.3` | $BM$ 太小 → B panel 被重复读 $\text{g-m}$ 次 |
 > | **指令浪费** | `instr/dpas ÷ 下限 > 1.2`（下限见 2.1） | Triton 的 descriptor 每轮重建，稳定 1.45–1.49x |
 >
 > 判定流程的第 2、3 步就是查前两种，别跳过 —— 一个 kernel 完全可能是
@@ -1034,9 +1034,9 @@ $$
 
 | 资源 | 需要的 clk | 上限可信度 |
 |---|---|---|
-| ALU2（XMX） | $\mathrm{ALU2\_events} / 80$ | **高**，反推得出，任何口径可用 |
-| ALU1（标量） | $\mathrm{ALU1\_events} / 160$ | **高**，同上 |
-| DRAM | $\mathrm{GPU\_MEMORY\_BYTE\_READ} / (407 \times 10^9 \times f)$ | **高**，stream 实测（未 profiling） |
+| ALU2（XMX） | $\text{ALU2-events} / 80$ | **高**，反推得出，任何口径可用 |
+| ALU1（标量） | $\text{ALU1-events} / 160$ | **高**，同上 |
+| DRAM | $\text{GPU-MEMORY-BYTE-READ} / (407 \times 10^9 \times f)$ | **高**，stream 实测（未 profiling） |
 | LSU（L1） | **没有可信上限** | 只报**速率**（次/clk），横向对比，不要算百分比 |
 
 $(256,4096,4096)$ 实例（干净时间 117.3 / 116.1 μs，事件取自 `-q` 采集）：
@@ -1074,7 +1074,7 @@ Triton 额外背了 **3.4 倍的 L1 访问**和 **45 倍的 ALU1**，却只慢 1
 | 指标 | 饱和阈值 | 含义 |
 |---|---|---|
 | `XVE_INST_EXECUTED_ALU2_ALL_UTILIZATION[%]` | > 85% | 算力打满（XMX）。**必须用干净口径重建值**，`-q` 直读会系统性偏低 |
-| `GPU_MEMORY_BYTE_READ_RATE[GBpS]` | > 350 | 带宽打满（DRAM）。**注意这也是速率**：`-q` 直读会偏低，而参照值 407 GB/s 是干净口径实测的，两者不可直接比 —— 用 $\mathrm{GPU\_MEMORY\_BYTE\_READ} / {t_{\text{干净}}}$ 自己算 |
+| `GPU_MEMORY_BYTE_READ_RATE[GBpS]` | > 350 | 带宽打满（DRAM）。**注意这也是速率**：`-q` 直读会偏低，而参照值 407 GB/s 是干净口径实测的，两者不可直接比 —— 用 $\text{GPU-MEMORY-BYTE-READ} / \text{clean time}$ 自己算 |
 | `XVE_SHARED_FUNCTION_ACCESS_HOLD[%]` | > 25% | 卡在 LSU 等共享单元 —— **LSU-bound 的主判据** |
 | `LOAD_STORE_CACHE_ACCESS / GpuCoreClocks` | **无可信上限** | 干净口径实测已达 89.70；只报速率、只做横比，**不要算百分比** |
 | `XVE_INST_EXECUTED_ALU1_ALL_UTILIZATION[%]` | > 85% | 标量管线打满（分母 160，厂商常数）。**同样要用重建值** |
@@ -1103,16 +1103,16 @@ Triton 额外背了 **3.4 倍的 L1 访问**和 **45 倍的 ALU1**，却只慢 1
 
 `BLOCK_M >> M` 或 `BLOCK_N >> N` 时，padding 出来的部分照样跑 dpas。
 
-实验 7 中 $M=4$ 用 $BM=16$ → DPAS 量变 4 倍。若浪费倍数足够大，$T_{\text{compute}}$ 会超过 $T_{\text{memory}}$，本该内存受限的 shape 变成算力受限。
+实验 7 中 $M=4$ 用 $BM=16$ → DPAS 量变 4 倍。若浪费倍数足够大，$\text{T-compute}$ 会超过 $\text{T-memory}$，本该内存受限的 shape 变成算力受限。
 
 判据：`ALU2_events / (M·N·K/256) > 1.2`
 修复：减小 `BLOCK_M`，或换 decode 专用模板
 
 #### 情况 B：DRAM 流量放大 → 仍是 memory-bound，但天花板抬高
 
-`BLOCK_M` 太小 → $g_m = \lceil M/BM \rceil$ 变大 → B 被重复读 $g_m$ 次。
+`BLOCK_M` 太小 → $\text{g-m} = \lceil M/BM \rceil$ 变大 → B 被重复读 $\text{g-m}$ 次。
 
-| BM | $g_m$ | 最坏 DRAM | 访存下界 |
+| BM | $\text{g-m}$ | 最坏 DRAM | 访存下界 |
 |---:|---:|---:|---:|
 | 32 | 8 | 272.6 MB | 597.9 μs |
 | 64 | 4 | 138.4 MB | 303.5 μs |
@@ -1208,10 +1208,10 @@ $(256,4096,4096)$ 恰在拐点（AI = 227.6 < 242，微弱内存受限），DPAS
 |---|---:|---|---|
 | ALU2（XMX）吞吐 | **80 slots/clk** | **厂商常数**：驱动的 `ALU2_UTILIZATION` 就按 $\frac{\text{events}}{\text{clk}\times80}$ 定义，反推是恒等式。旁证：Intel 公布 B580 117 TF/s @2.85GHz $\Rightarrow$ 2048 FLOP/clk/core，与之一致 | **中高**（厂商口径，非独立实测） |
 | 标量管线（ALU0/ALU1）吞吐 | **160 slots/clk** | 同为**厂商常数**（`ALU1_UTILIZATION` 的定义分母）；「两个 kernel 独立反推」也是恒等式 | **中高**（厂商口径） |
-| 1 slot = 256 MAC | **256**（bf16） | $MNK/\mathrm{ALU2\_events}$ 精确等于 256.0000，10/10 shape | **高** |
+| 1 slot = 256 MAC | **256**（bf16） | $MNK/\text{ALU2-events}$ 精确等于 256.0000，10/10 shape | **高** |
 | 1 slot = 512 MAC | **512**（int8） | 同法标定，精确等于 512.0000，4/4 shape；`torch._int_mm`，ceiling 仍为 80.000 | **高** |
 | DRAM 可达带宽 | **~407 GB/s** | stream 类基准实测（copy 398、add 400、纯读 448、33.6 MB bf16 读 407.6） | **高** |
-| instr/dpas 下限 $1+18/D$ | $C_{\text{var}}{=}17,\ C_{\text{fix}}{=}1$ | 从 oneDNN K 循环逐条数出并按「是否随展开复制」分类；oneDNN 实测 1.52 vs 下限 1.56 = 0.97x | **中高**（$C$ 随 tile 尺寸变化非常数；展开系数 $U$ 影响 $<2\%$） |
+| instr/dpas 下限 $1+18/D$ | $\text{C-var} = 17,\ \text{C-fix} = 1$ | 从 oneDNN K 循环逐条数出并按「是否随展开复制」分类；oneDNN 实测 1.52 vs 下限 1.56 = 0.97x | **中高**（$C$ 随 tile 尺寸变化非常数；展开系数 $U$ 影响 $<2\%$） |
 | LSU 上限 | **未知** | 无 `UTILIZATION` 计数器。profiling 口径封顶 82.07，**但干净口径实测已达 89.70** —— 82 只是被干扰压低的观察值，不是硬件上限 | **低** |
 | `ISSUED` 上限 | **未知** | 同上，profiling 封顶 80.25，干净口径已达 87.76。**已不再使用这个判据** | — |
 | 时间派生指标的**跨 config 比较** | **不可用** | `-q -g ComputeBasic` 会颠倒快慢排序（$BK{=}16$ vs $32$：未 profiling 203.77/239.27，profiling 下 316.7/292.4）；且对 Triton 干扰 33%、对 oneDNN 只 5.5% | **已证伪** |
@@ -1366,7 +1366,7 @@ unitrace -d python your_script.py
 > 事件计数在两种口径下相同（同一个程序、同样的指令），所以可以直接重建：
 >
 > $$
-> \mathrm{UTILIZATION}_{\text{干净}} = \frac{\mathrm{events}_{\mathrm{-q}}}{t_{\mathrm{-d}} \times f \times \text{ceiling}}
+> \text{clean UTILIZATION} = \frac{\text{events at -q}}{\text{time at -d} \times f \times \text{ceiling}}
 > $$
 >
 > | | events 来源 | clk 来源 | 描述哪次执行 |
@@ -1481,16 +1481,16 @@ config 搜索，追的其实是一个不存在的 19% 差距。
 | `ALU2_UTILIZATION` 计数器直读 | **98.5%** |
 
 > **⚠ 更正（2026-08-13）：这三行不是三个独立来源，是同一个恒等式。**
-> 设无 padding 浪费（本例成立，$\mathrm{ALU2\_events}=MNK/256$）：
+> 设无 padding 浪费（本例成立，$\text{ALU2-events} = MNK/256$）：
 >
 > $$
 > \frac{\text{achieved}}{\text{peak}} = \frac{2MNK/t}{20\cdot2048\cdot f}
-> = \frac{MNK}{20480\,t f} = \frac{\mathrm{ALU2\_events}/\mathrm{clk}}{80} = \mathrm{ALU2\_UTILIZATION}
+> = \frac{MNK}{20480\,t f} = \frac{\text{ALU2-events}/\mathrm{clk}}{80} = \text{ALU2-UTILIZATION}
 > $$
 >
 > 三者恒等，"一致"是必然的。
 >
-> **这张表真正验证的是**：$\mathrm{ALU2\_events}$ 精确等于 $MNK/256$
+> **这张表真正验证的是**：$\text{ALU2-events}$ 精确等于 $MNK/256$
 > （否则三者就会差一个浪费系数）—— 这条是纯事件计数，站得住。
 > 至于"峰值是 98.3 而不是 117"，靠的是 1.7 节那两条独立证据（256 实测 + Intel 公布的 per-core 吞吐），不是这张表。
 
@@ -1661,7 +1661,7 @@ unitrace 会把 kernel 的 grid 和 local size 印在名字里，可以反推出
 
 搜索空间代码里，`SMALL_M_SPACE` 对 $M<512$ 把 `BLOCK_M` 封顶在 128（当初为了控制搜索量）。
 而 unitrace 显示 oneDNN 用的是 `gemm_kernel[SIMD16 {16;1;1} {64;8;1}]`
-—— 16 个 workgroup，即 $1\times16$ 个 $256\times256$ tile，$\text{grid}_m=1$，B 只读一次。
+—— 16 个 workgroup，即 $1\times16$ 个 $256\times256$ tile，$\text{grid-m} = 1$，B 只读一次。
 **$BM=256$ 恰好在封顶线外，从来没被搜到过。**
 
 补测（unitrace 设备时间）：
@@ -1702,8 +1702,8 @@ decode shape $(4,4096,4096)$，Triton config $(16,256,32,2,8)$：
 预测公式（与实测完全一致）：
 
 $$
-ALU2_{min} = \frac{M\cdot N\cdot K}{256}, \qquad
-ALU2_{actual} = \frac{\lceil M/BM \rceil BM \cdot \lceil N/BN \rceil BN \cdot \lceil K/BK \rceil BK}{256}
+\mathit{ALU2-min} = \frac{M\cdot N\cdot K}{256}, \qquad
+\mathit{ALU2-actual} = \frac{\lceil M/BM \rceil BM \cdot \lceil N/BN \rceil BN \cdot \lceil K/BK \rceil BK}{256}
 $$
 
 $M=4$ 用 $BM=16$ → 4 倍浪费，公式预测 1,048,576，实测 1,048,576。
@@ -1723,23 +1723,23 @@ Triton 197 GB/s（48%）。该看哪个判据取决于 shape，统一方法见 2
 
 > **⚠ 2026-08-13 更正：原来的「两条命题」都是恒等式，不构成验证。**
 >
-> - 命题 1（ceiling = 80）：驱动就是按 $\texttt{UTIL}=\frac{\texttt{events}}{\texttt{clk}\times 80}$ 算的，
+> - 命题 1（ceiling = 80）：驱动就是按 $\text{UTIL} = \frac{\text{events}}{\text{clk}\times 80}$ 算的，
 >   反推当然回到 80（逐行 std = 0.000003）。见 1.7 节。
 > - 命题 2（两条路径一致）：代数展开后
->   $\frac{\texttt{UTIL}}{\text{achieved/peak}} = \frac{\texttt{events}/(t f \cdot 80)}{2MNK/(t\cdot 20\cdot 2048\cdot f)} = \frac{256\,\texttt{events}}{MNK}$
+>   $\frac{\text{UTIL}}{\text{achieved/peak}} = \frac{\text{events}/(t f \cdot 80)}{2MNK/(t\cdot 20\cdot 2048\cdot f)} = \frac{256\,\text{events}}{MNK}$
 >   —— $t$ 和 $f$ 全约掉，**恒等于路径 A**。表里那 0.0005 只是舍入。
 >
 > **这次采集真正证明的只有一条**（但它很硬，因为是纯事件计数）：
 >
 > $$
-> \dfrac{M\cdot N\cdot K}{\mathrm{ALU2\_events}} \text{ 在无浪费的 shape 上精确等于 } 256.0000
+> \dfrac{M\cdot N\cdot K}{\text{ALU2-events}} \text{ 在无浪费的 shape 上精确等于 } 256.0000
 > $$
 >
 > 有浪费的 4 个 shape 给出 234.06 / 245.76 / 252.06 等非 256 值，
 > 而这些值能被**波数量化模型**（$T$、20 个 workgroup，与计数器无关）精确复现 ——
 > **那才是真正的独立验证**，见实验 8b。
 
-> **读表前先澄清一个容易误读的点**：下表的「有效 MAC/slot」= $\dfrac{M\cdot N\cdot K}{\mathrm{ALU2\_events}}$，
+> **读表前先澄清一个容易误读的点**：下表的「有效 MAC/slot」= $\dfrac{M\cdot N\cdot K}{\text{ALU2-events}}$，
 > 分子是**算法需要的** MAC，分母是**硬件实际执行的** slot 数。
 >
 > 物理上 **1 个 slot 恒等于 256 MAC**（$16$ 个 SIMD 通道 $\times$ $8\times2$ 个 K 步），这是硬件常量。
@@ -1753,7 +1753,7 @@ Triton 197 GB/s（48%）。该看哪个判据取决于 shape，统一方法见 2
 
 | 列 | 含义 | 来源 |
 |---|---|---|
-| **有效 MAC/slot** | $\dfrac{M\cdot N\cdot K}{\mathrm{ALU2\_events}}$ | **纯事件计数，本表唯一真正的测量**。无浪费时应为 256 |
+| **有效 MAC/slot** | $\dfrac{M\cdot N\cdot K}{\text{ALU2-events}}$ | **纯事件计数，本表唯一真正的测量**。无浪费时应为 256 |
 | 浪费 | $\dfrac{256}{\text{有效 MAC/slot}}$ | 由上一列换算 |
 | **UTIL%** | DPAS 管线占空比 | `ALU2_UTILIZATION` 直读（**`-q` 口径**，欲得干净口径需按 2.8 节重建） |
 
@@ -1802,8 +1802,8 @@ Triton 197 GB/s（48%）。该看哪个判据取决于 shape，统一方法见 2
 | $(4096,11008,4096)$ | 1.0156 | 97.80 | 96.32 | 1.5 pt |
 
 > 这里保留「有效%」是因为**它就是本节要说的事**：管线看着忙，但有一部分白跑。
-> 注意它是**派生列**（$=\texttt{UTIL\%}/\text{浪费}$），不是独立测量 ——
-> 真正的测量只有「浪费」那一列背后的 $MNK/\mathrm{ALU2\_events}$。
+> 注意它是**派生列**（$=\text{UTIL\%}/\text{浪费}$），不是独立测量 ——
+> 真正的测量只有「浪费」那一列背后的 $MNK/\text{ALU2-events}$。
 > 实验 8 的大表里同一列已删除，因为那里所有 shape 摆在一起时它没有额外信息。
 
 机制：oneDNN 用 **20 个常驻 workgroup**（`gemm_kernel[SIMD16 {20;1;1} ...]`，每个 Xe core 一个），
@@ -1897,7 +1897,7 @@ $$
 用时间预算分解（`probe_residual_gap.py`，未受 profiling 干扰的时间，2.4 GHz）：
 
 $$
-T_{\text{floor}} = \frac{MNK/256}{80 \times 2.4\text{G}} = \frac{33{,}554{,}432}{192\times10^9} = 174.8\ \mu s
+\mathit{T-floor} = \frac{MNK/256}{80 \times 2.4\text{G}} = \frac{33{,}554{,}432}{192\times10^9} = 174.8\ \mu s
 $$
 
 这是 ALU2 满载且零浪费时的时间，**两个实现共用同一个 floor**（算法工作量相同）。
@@ -2007,7 +2007,7 @@ LHS 的路径 —— 它改用 SLM 中转，每次 K 迭代 256 条 `load.slm`�
 >
 > | | 本表（21.22） | 计数器（19.84） |
 > |---|---|---|
-> | 来源 | 反汇编，静态数循环体 | $\mathrm{ISSUED\_ALL}/(\mathrm{ALU2\_events}/8)$ |
+> | 来源 | 反汇编，静态数循环体 | $\text{ISSUED-ALL}/(\text{ALU2-events}/8)$ |
 > | 范围 | **只有 K 循环体** | **整个 kernel**，含 prologue/epilogue |
 > | 数的对象 | ASM 里写的每一行 | 硬件真正**发射**出去的指令 |
 >
@@ -2060,7 +2060,7 @@ TensorDescriptor LHS 有 64 条（$U=4$）。但**展开几乎不动下限** —
 | TensorDescriptor LHS | 64 | 4 | $1+\tfrac{17}{16}+\tfrac{1}{64} = 2.08$ | **19.84** | **9.55x** |
 
 表中的 **2.46 和 19.84 就是上面对比表最后一行的 instr/dpas**，由计数器算出：
-$\mathrm{ISSUED\_ALL} / (\mathrm{ALU2\_events}/8)$，分别是
+$\text{ISSUED-ALL} / (\text{ALU2-events}/8)$，分别是
 $72{,}063{,}264 / 29{,}360{,}128$ 和 $582{,}553{,}616 / 29{,}360{,}128$。
 两者相除 $19.84/2.45 = 8.1$ 倍，就是换个写法带来的指令膨胀。
 
@@ -2127,7 +2127,7 @@ K 循环里仍有大量可以外提的 descriptor 重建。
 代价：
 
 $$
-28\ \text{条} \times \underbrace{448}_{K/BK} \times \underbrace{4096}_{\text{线程}} = 5.14\times10^7\ \text{条}
+28\ \text{条} \times 448\ \text{(K/BK)} \times 4096\ \text{(线程)} = 5.14\times10^7\ \text{条}
 $$
 
 **这和实验 5 里 $(256,4096,4096)$ 的 15 条立即数是同一个 backend 缺陷**，只是这里
@@ -2157,7 +2157,7 @@ $$
 用 $(256,4096,4096)$ Triton 独立验证：$\dfrac{22.1\text{M}}{320{,}311} = 69.0$ slots/clk，
 $\dfrac{69.0}{0.432} = 159.7$。**两个毫不相关的 kernel 都反推出 160。**
 
-**结论 1**：$\mathrm{ALU1\_UTILIZATION} = \mathrm{ALU1\ slots/clk} / 160$，上限已确定。
+**结论 1**：$\text{ALU1-UTILIZATION} = \text{ALU1 slots/clk} / 160$，上限已确定。
 
 **结论 2**：160 属于 **ALU0/ALU1 执行槽**，**不属于 `ISSUED`**。两者差约 2 倍
 （61.98 vs 116.28），因为多数指令是 SIMD32，**占 2 个执行槽但只发射 1 次**。
@@ -2184,7 +2184,7 @@ Triton 有 43% 的标量执行槽被地址/descriptor 计算吃掉，oneDNN 只�
 | Xe core 数 | 20 | 规格 |
 | XVE / Xe core | 8 | 规格 |
 | XMX / Xe core | 8 | 规格 |
-| 硬件线程总数 | 1280 | $160_{\text{XVE}} \times 8$ |
+| 硬件线程总数 | 1280 | $160\ \text{XVE} \times 8$ |
 | 核心频率 | 2.4 GHz | `xpu-smi`，实测 2392–2399 |
 | 1 ALU2 slot | 256 MAC = 512 FLOP | 计数器标定，10/10 shape 验证（**仅 bf16**）|
 |  int8 对应值 | 512 MAC = 1024 OPS | 计数器标定，4/4 shape 验证（`validate_int8_slot.py`） |
@@ -2195,7 +2195,7 @@ Triton 有 43% 的标量执行槽被地址/descriptor 计算吃掉，oneDNN 只�
 | 理论 DRAM BW | 456 GB/s | 规格 |
 | **可达 DRAM BW** | **~407 GB/s** | 实测 |
 | 机器平衡点 | 242 FLOP/byte | $98.3\text{T}/407\text{G}$ |
-| ALU2 slot 上限 | 80 slots/clk | $160_{\text{XMX}} \times 0.5$ |
+| ALU2 slot 上限 | 80 slots/clk | $160\ \text{XMX} \times 0.5$ |
 | 标量管线上限 | 160 slots/clk | ALU0/ALU1，两个 kernel 反推验证 |
 | 指令发射上限 | **未知** | `ISSUED` 实测封顶 80.25，不要套 160 |
 | L1/LSU 上限 | **未知** | profiling 口径封顶 82.07，干净口径实测已达 **89.70**；80 已被证伪 |
